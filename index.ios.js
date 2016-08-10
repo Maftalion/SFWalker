@@ -55,7 +55,7 @@ class MapExample extends Component {
     }],
 
   };
-
+  //In progress
   fixCoords = (coordinates) => {
     this.setState({
       coordinates: this.state.coordinates.map(function(item) {
@@ -63,7 +63,7 @@ class MapExample extends Component {
       })
     });
   };
-
+  //In progress
   setCoords = (input, state) => {
     var coords = convertGPS(input);
   }
@@ -99,7 +99,7 @@ class MapExample extends Component {
     return (
         <View style={styles.container}>
           <MapView
-            ref={map => { this._map = map; }}
+            ref={map => { this._map = map }}
             style={styles.map}
             initialCenterCoordinate={this.state.center}
             initialZoomLevel={this.state.zoom}
