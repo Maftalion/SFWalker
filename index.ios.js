@@ -9,8 +9,11 @@ import {
   Text,
   StatusBar,
   View,
+  TextInput,
   ScrollView
 } from 'react-native';
+
+import convertGPS from './src/api';
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
@@ -28,16 +31,16 @@ class MapExample extends Component {
       type: 'polyline',
       strokeColor: '#00FB00',
       strokeWidth: 3,
-      id: 'foobar'
+      id: 'navigateLine'
     }, {
       coordinates: [37.8038329212967, -122.40498607552468],
       id: 'Start',
       type: 'point',
       title: 'Starting Location',
       annotationImage: {
-      source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-      height: 15,
-      width: 15
+        source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+        height: 15,
+        width: 15
       }
     }, {
       coordinates: [37.80419669589443, -122.4022807324564],
@@ -45,11 +48,12 @@ class MapExample extends Component {
       type: 'point',
       title: 'Destination',
       annotationImage: {
-      source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-      height: 15,
-      width: 15
-    }
-  }]
+        source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+        height: 15,
+        width: 15
+      }
+    }],
+
   };
 
   fixCoords = (coordinates) => {
@@ -60,10 +64,17 @@ class MapExample extends Component {
     });
   };
 
+  setCoords = (input, state) => {
+    var coords = convertGPS(input);
+  }
+
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
     console.log('onRegionDidChange', location);
   };
+  onChangeUserTrackingMode = (userTrackingMode) => {
+    this.setState({ userTrackingMode });
+    console.log('onChangeUserTrackingMode', userTrackingMode);
   // onRegionWillChange = (location) => {
   //   console.log('onRegionWillChange', location);
   // };
@@ -82,9 +93,6 @@ class MapExample extends Component {
   // onTap = (location) => {
   //   console.log('onTap', location);
   // };
-  onChangeUserTrackingMode = (userTrackingMode) => {
-    this.setState({ userTrackingMode });
-    console.log('onChangeUserTrackingMode', userTrackingMode);
   };
 
   componentWillMount() {
@@ -106,9 +114,18 @@ class MapExample extends Component {
   }
 
   render() {
-    StatusBar.setHidden(true);
     return (
       <View style={styles.container}>
+        <View style={{padding: 5}}>
+          <TextInput
+            style={{height: 30, textAlign: 'center', borderColor: 'black', borderWidth: 1, padding: 5}}
+            placeholder="Enter current location"
+            />
+            <TextInput
+              style={{height: 30, textAlign: 'center', borderColor: 'black', borderWidth: 1, padding: 5}}
+              placeholder="Enter Destination"
+              />
+        </View>
         <MapView
           ref={map => { this._map = map; }}
           style={styles.map}
