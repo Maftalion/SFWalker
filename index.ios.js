@@ -24,8 +24,8 @@ class MapExample extends Component {
       latitude: 37.76,
       longitude: -122.445
     },
-    zoom: 11,
-    userTrackingMode: Mapbox.userTrackingMode.none,
+    zoom: 13,
+    userTrackingMode: Mapbox.userTrackingMode.follow,
     annotations: [{
       coordinates: [[37.8038329212967,-122.40498607552468],[37.80402008919458,-122.40345922804256],[37.80403232677321,-122.40335872902352],[37.804043223247334,-122.40326745009796],[37.8041535290931, -122.40238315931316],[37.80418009972615, -122.40232004358228],[37.80419669589443, -122.4022807324564]],
       type: 'polyline',
@@ -75,24 +75,6 @@ class MapExample extends Component {
   onChangeUserTrackingMode = (userTrackingMode) => {
     this.setState({ userTrackingMode });
     console.log('onChangeUserTrackingMode', userTrackingMode);
-  // onRegionWillChange = (location) => {
-  //   console.log('onRegionWillChange', location);
-  // };
-  // onUpdateUserLocation = (location) => {
-  //   console.log('onUpdateUserLocation', location);
-  // };
-  // onOpenAnnotation = (annotation) => {
-  //   console.log('onOpenAnnotation', annotation);
-  // };
-  // onRightAnnotationTapped = (e) => {
-  //   console.log('onRightAnnotationTapped', e);
-  // };
-  // onLongPress = (location) => {
-  //   console.log('onLongPress', location);
-  // };
-  // onTap = (location) => {
-  //   console.log('onTap', location);
-  // };
   };
 
   componentWillMount() {
@@ -115,45 +97,45 @@ class MapExample extends Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <View style={{padding: 5}}>
-          <TextInput
-            style={{height: 30, textAlign: 'center', borderColor: 'black', borderWidth: 1, padding: 5}}
-            placeholder="Enter current location"
-            />
+        <View style={styles.container}>
+          <MapView
+            ref={map => { this._map = map; }}
+            style={styles.map}
+            initialCenterCoordinate={this.state.center}
+            initialZoomLevel={this.state.zoom}
+            initialDirection={0}
+            rotateEnabled={true}
+            scrollEnabled={true}
+            zoomEnabled={true}
+            showsUserLocation={true}
+            userTrackingMode={this.state.userTrackingMode}
+            annotations={this.state.annotations}
+            annotationsAreImmutable
+            onChangeUserTrackingMode={this.onChangeUserTrackingMode}
+            onRegionDidChange={this.onRegionDidChange}
+          />
+          <View style={{opacity: 5}}>
             <TextInput
-              style={{height: 30, textAlign: 'center', borderColor: 'black', borderWidth: 1, padding: 5}}
-              placeholder="Enter Destination"
+              style={styles.textInput}
+              placeholder="Enter current location"
               />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter Destination"
+                />
+          </View>
         </View>
-        <MapView
-          ref={map => { this._map = map; }}
-          style={styles.map}
-          initialCenterCoordinate={this.state.center}
-          initialZoomLevel={this.state.zoom}
-          initialDirection={0}
-          rotateEnabled={true}
-          scrollEnabled={true}
-          zoomEnabled={true}
-          showsUserLocation={false}
-          userTrackingMode={this.state.userTrackingMode}
-          annotations={this.state.annotations}
-          annotationsAreImmutable
-          onChangeUserTrackingMode={this.onChangeUserTrackingMode}
-          onRegionDidChange={this.onRegionDidChange}
-          // onRegionWillChange={this.onRegionWillChange}
-          // onOpenAnnotation={this.onOpenAnnotation}
-          // onRightAnnotationTapped={this.onRightAnnotationTapped}
-          // onUpdateUserLocation={this.onUpdateUserLocation}
-          // onLongPress={this.onLongPress}
-          // onTap={this.onTap}
-        />
-      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  textInput: {
+    height: 30,
+    textAlign: 'center',
+    borderColor: 'black',
+    borderWidth: 1,
+  },
   container: {
     flex: 1,
     alignItems: 'stretch'
