@@ -145,6 +145,7 @@ class MapExample extends Component {
   render() {
     return (
         <View style={styles.container}>
+          <View style={styles.top}></View>
           <MapView
             ref={map => { this._map = map; }}
             style={styles.map}
@@ -180,6 +181,10 @@ class MapExample extends Component {
 }
 
 const styles = StyleSheet.create({
+  top: {
+    flex: 1,
+    backgroundColor: 'white'
+  },
   textInput: {
     height: 30,
     textAlign: 'center',
@@ -191,10 +196,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch'
   },
   map: {
-    flex: 1
-  },
-  scrollView: {
-    flex: 1
+    flex: 28
   }
 });
 
