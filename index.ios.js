@@ -7,10 +7,8 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  StatusBar,
   View,
   TextInput,
-  ScrollView
 } from 'react-native';
 
 import convertGPS from './src/api';
@@ -34,28 +32,7 @@ class MapExample extends Component {
       strokeColor: '#00FB00',
       strokeWidth: 3,
       id: 'navigateLine'
-    }, {
-      coordinates: [37.8038329212967, -122.40498607552468],
-      id: 'Start',
-      type: 'point',
-      title: 'Starting Location',
-      annotationImage: {
-        source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-        height: 15,
-        width: 15
-      }
-    }, {
-      coordinates: [37.80419669589443, -122.4022807324564],
-      id: 'End',
-      type: 'point',
-      title: 'Destination',
-      annotationImage: {
-        source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-        height: 15,
-        width: 15
-      }
     }]
-
   };
 
   //In progress
