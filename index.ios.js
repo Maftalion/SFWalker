@@ -57,19 +57,47 @@ class MapExample extends Component {
     }]
 
   };
-  //In progress
-  fixCoords = (coordinates) => {
-    this.setState({
-      coordinates: this.state.coordinates.map(function(item) {
-      [item[0],item[1]] = [item[1], item[0]];
-      })
-    });
-  };
-  //In progress
-  setCoords = (input, state) => {
-    var coords = convertGPS(input);
-  }
 
+  //In progress
+  handleStart = (input) => {
+    convertGPS(input)
+      .then((data) => {
+        this.setState({
+          annotations: [{
+            coordinates: [data.lat, data.lon],
+            title: data.name,
+            type: 'point',
+            annotationImage: {
+              source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+              height: 25,
+              width: 25
+            },
+            id: 'entered location'
+          }]
+        })
+        this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
+      });
+  };
+
+  handleDest = (input) => {
+    convertGPS(input)
+      .then((data) => {
+        this.setState({
+          annotations: [{
+            coordinates: [data.lat, data.lon],
+            title: data.name,
+            type: 'point',
+            annotationImage: {
+              source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+              height: 25,
+              width: 25
+            },
+            id: 'entered destination'
+          }]
+        })
+        this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
+      });
+  };
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
     console.log('onRegionDidChange', location);
@@ -118,7 +146,7 @@ class MapExample extends Component {
     return (
         <View style={styles.container}>
           <MapView
-            ref={map => { this._map = map }}
+            ref={map => { this._map = map; }}
             style={styles.map}
             initialCenterCoordinate={this.state.center}
             initialZoomLevel={this.state.zoom}
@@ -129,16 +157,19 @@ class MapExample extends Component {
             showsUserLocation={true}
             userTrackingMode={this.state.userTrackingMode}
             annotations={this.state.annotations}
-            annotationsAreImmutable
             onChangeUserTrackingMode={this.onChangeUserTrackingMode}
             onRegionDidChange={this.onRegionDidChange}
+            logoIsHidden={true}
+
           />
-          <View style={{opacity: 5}}>
+          <View>
             <TextInput
+              onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text)}
               style={styles.textInput}
               placeholder="Enter current location"
               />
               <TextInput
+                onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
                 style={styles.textInput}
                 placeholder="Enter Destination"
                 />
