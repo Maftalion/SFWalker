@@ -21,24 +21,34 @@ Once the project moves into development, the press release can be used as a touc
 
 ## Sub-Heading ##
   > Describe who the market for the product is and what benefit they get. One sentence only underneath the title.
+Find the safest path to walk or bike home.
 
 ## Summary ##
   > Give a summary of the product and the benefit. Assume the reader will not read anything else so make this paragraph good.
 
+[Product name] is Waze for pedestrians and bikers. The app tells you the best way to get home by incorporating recent crime data in your city. The app balances speed and safety together for the best possible path. [Product name] also allows you to report safety issues that will immediately alert nearby users. If you aren't comfortable walking, [Product name] also helps you price compare Uber, Lyft, and taxis in one view. Finally, [Product name] gives you up-to-date public transit time estimates. 
+
 ## Problem ##
   > Describe the problem your product solves.
+[Product name] helps users on foot and on bike incorporate historical and real-time safety data into their commutes. 
 
 ## Solution ##
   > Describe how your product elegantly solves the problem.
 
+[Product name] users simply enter their location and destination, and the app's algorithm will determine the optimally safe and speedy route home.
+
 ## Quote from You ##
   > A quote from a spokesperson in your company.
+"[Product name] fulfills a crucial function for urban residents, which is to immediately inform them of areas where they may feel or be threatened".
 
 ## How to Get Started ##
   > Describe how easy it is to get started.
+Simply go to the Apple App Store to download and install [Product name] today.
 
 ## Customer Quote ##
   > Provide a quote from a hypothetical customer that describes how they experienced the benefit.
+"I have a friend who got into a bad bike accident and another who was mugged recently, so I'll definitely be using [Product name] to plan my routes home."
 
 ## Closing and Call to Action ##
   > Wrap it up and give pointers where the reader should go next.
+Find us on the app store and visit us at [product name].com! We'd love your feedback to continue improving on the product.
