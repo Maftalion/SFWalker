@@ -19,10 +19,12 @@ const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpn
 Mapbox.setAccessToken(accessToken);
 
 class MapExample extends Component {
+
   state = {
     center: {
-      latitude: 37.76,
-      longitude: -122.445
+      latitude: 37.7836925,
+      longitude: -122.4111781
+      
     },
     zoom: 13,
     userTrackingMode: Mapbox.userTrackingMode.follow,
@@ -52,7 +54,7 @@ class MapExample extends Component {
         height: 15,
         width: 15
       }
-    }],
+    }]
 
   };
   //In progress
@@ -87,6 +89,23 @@ class MapExample extends Component {
     this._offlineErrorSubscription = Mapbox.addOfflineErrorListener(error => {
       console.log('offline error', error);
     });
+  }
+
+  componentDidMount() {
+
+    var mainComponent = this;
+
+    fetch('http://localhost:3000/allstreets')
+      .then((response) => response.json())
+      .then((responseJson) => {
+        
+        mainComponent.setState({ annotations: responseJson });
+
+        //return responseJson;
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   componentWillUnmount() {
