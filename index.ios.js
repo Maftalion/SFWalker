@@ -26,13 +26,7 @@ class MapExample extends Component {
     },
     zoom: 13,
     userTrackingMode: Mapbox.userTrackingMode.follow,
-    annotations: [{
-      coordinates: [[37.8038329212967,-122.40498607552468],[37.80402008919458,-122.40345922804256],[37.80403232677321,-122.40335872902352],[37.804043223247334,-122.40326745009796],[37.8041535290931, -122.40238315931316],[37.80418009972615, -122.40232004358228],[37.80419669589443, -122.4022807324564]],
-      type: 'polyline',
-      strokeColor: '#00FB00',
-      strokeWidth: 3,
-      id: 'navigateLine'
-    }]
+    annotations: []
   };
 
   //In progress
