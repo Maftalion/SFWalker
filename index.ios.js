@@ -7,8 +7,10 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
+  StatusBar,
   View,
   TextInput,
+  ScrollView
 } from 'react-native';
 
 import convertGPS from './src/api';
@@ -22,7 +24,7 @@ class MapExample extends Component {
     center: {
       latitude: 37.7836925,
       longitude: -122.4111781
-
+      
     },
     zoom: 13,
     userTrackingMode: Mapbox.userTrackingMode.follow,
@@ -32,49 +34,42 @@ class MapExample extends Component {
       strokeColor: '#00FB00',
       strokeWidth: 3,
       id: 'navigateLine'
+    }, {
+      coordinates: [37.8038329212967, -122.40498607552468],
+      id: 'Start',
+      type: 'point',
+      title: 'Starting Location',
+      annotationImage: {
+        source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+        height: 15,
+        width: 15
+      }
+    }, {
+      coordinates: [37.80419669589443, -122.4022807324564],
+      id: 'End',
+      type: 'point',
+      title: 'Destination',
+      annotationImage: {
+        source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+        height: 15,
+        width: 15
+      }
     }]
-  };
 
+  };
   //In progress
-  handleStart = (input) => {
-    convertGPS(input)
-      .then((data) => {
-        this.setState({
-          annotations: this.state.annotations.concat([{
-            coordinates: [data.lat, data.lon],
-            title: data.name,
-            type: 'point',
-            annotationImage: {
-              source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-              height: 25,
-              width: 25
-            },
-            id: 'entered location'
-          }])
-        })
-        this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
-      });
+  fixCoords = (coordinates) => {
+    this.setState({
+      coordinates: this.state.coordinates.map(function(item) {
+      [item[0],item[1]] = [item[1], item[0]];
+      })
+    });
   };
+  //In progress
+  setCoords = (input, state) => {
+    var coords = convertGPS(input);
+  }
 
-  handleDest = (input) => {
-    convertGPS(input)
-      .then((data) => {
-        this.setState({
-          annotations: this.state.annotations.concat([{
-            coordinates: [data.lat, data.lon],
-            title: data.name,
-            type: 'point',
-            annotationImage: {
-              source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-              height: 25,
-              width: 25
-            },
-            id: 'entered destination'
-          }])
-        })
-        this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
-      });
-  };
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
     console.log('onRegionDidChange', location);
@@ -103,8 +98,8 @@ class MapExample extends Component {
     fetch('http://localhost:3000/allstreets')
       .then((response) => response.json())
       .then((responseJson) => {
-
-        this.setState({ annotations: this.state.annotations.concat(responseJson) });
+        
+        mainComponent.setState({ annotations: responseJson });
 
         //return responseJson;
       })
@@ -122,9 +117,8 @@ class MapExample extends Component {
   render() {
     return (
         <View style={styles.container}>
-          <View style={styles.top}></View>
           <MapView
-            ref={map => { this._map = map; }}
+            ref={map => { this._map = map }}
             style={styles.map}
             initialCenterCoordinate={this.state.center}
             initialZoomLevel={this.state.zoom}
@@ -135,19 +129,16 @@ class MapExample extends Component {
             showsUserLocation={true}
             userTrackingMode={this.state.userTrackingMode}
             annotations={this.state.annotations}
+            annotationsAreImmutable
             onChangeUserTrackingMode={this.onChangeUserTrackingMode}
             onRegionDidChange={this.onRegionDidChange}
-            logoIsHidden={true}
-
           />
-          <View>
+          <View style={{opacity: 5}}>
             <TextInput
-              onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text)}
               style={styles.textInput}
               placeholder="Enter current location"
               />
               <TextInput
-                onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
                 style={styles.textInput}
                 placeholder="Enter Destination"
                 />
@@ -158,10 +149,6 @@ class MapExample extends Component {
 }
 
 const styles = StyleSheet.create({
-  top: {
-    flex: 1,
-    backgroundColor: 'white'
-  },
   textInput: {
     height: 30,
     textAlign: 'center',
@@ -173,7 +160,10 @@ const styles = StyleSheet.create({
     alignItems: 'stretch'
   },
   map: {
-    flex: 28
+    flex: 1
+  },
+  scrollView: {
+    flex: 1
   }
 });
 
