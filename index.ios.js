@@ -9,10 +9,10 @@ import {
   Text,
   StatusBar,
   View,
+  Image,
   TextInput,
-  ScrollView
 } from 'react-native';
-
+import Button from 'react-native-button';
 import convertGPS from './src/api';
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
@@ -26,7 +26,7 @@ class MapExample extends Component {
       longitude: -122.4111781
 
     },
-    zoom: 13,
+    zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
     annotations: []
   };
@@ -128,14 +128,25 @@ class MapExample extends Component {
             rotateEnabled={true}
             scrollEnabled={true}
             zoomEnabled={true}
+            logoIsHidden={true}
             showsUserLocation={true}
             userTrackingMode={this.state.userTrackingMode}
             annotations={this.state.annotations}
-            annotationsAreImmutable
             onChangeUserTrackingMode={this.onChangeUserTrackingMode}
             onRegionDidChange={this.onRegionDidChange}
-          />
-          <View style={{opacity: 5}}>
+            />
+          <View style={{justifyContent: 'space-around', flexDirection: 'row', backgroundColor: 'black'}}>
+            <Button>
+            <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/walk.gif')}/>
+            </Button>
+            <Button>
+            <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/bike.gif')}/>
+            </Button>
+            <Button>
+            <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/taxi.gif')}/>
+            </Button>
+          </View>
+          <View>
             <TextInput
               style={styles.textInput}
               placeholder="Enter current location"
