@@ -1,10 +1,10 @@
 var express = require('express');
 var app = express();
 
-//transforms nodes from interhashScores.json into array of objects expected by MapBox annotations, in order to draw street colors 
+//transforms nodes from interhashScores.json into array of objects expected by MapBox annotations, in order to draw street colors
 var generatePathColors = require('./pathColors');
 
-var port = 3000;
+var port = process.env.PORT || 3000;
 
 generatePathColors
 .then(function(result){
@@ -21,7 +21,3 @@ generatePathColors
 .catch(function(e) {
     console.log(e);
 });
-
-
-
-

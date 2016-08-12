@@ -22,7 +22,7 @@ class MapExample extends Component {
     center: {
       latitude: 37.7836925,
       longitude: -122.4111781
-      
+
     },
     zoom: 13,
     userTrackingMode: Mapbox.userTrackingMode.follow,
@@ -39,29 +39,28 @@ class MapExample extends Component {
   handleStart = (input) => {
     convertGPS(input)
       .then((data) => {
-        this.setState(
-          annotations.concat(
-            [{coordinates: [data.lat, data.lon],
-              title: data.name,
-              type: 'point',
-              annotationImage: {
-                source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-                height: 25,
-                width: 25
-              },
-              id: 'entered location'
-            }]
-          )
-        )
+        this.setState({
+          annotations: this.state.annotations.concat([{
+            coordinates: [data.lat, data.lon],
+            title: data.name,
+            type: 'point',
+            annotationImage: {
+              source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+              height: 25,
+              width: 25
+            },
+            id: 'entered location'
+          }])
+        })
         this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
-      })
+      });
   };
 
   handleDest = (input) => {
     convertGPS(input)
       .then((data) => {
         this.setState({
-          annotations: [{
+          annotations: this.state.annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -71,7 +70,7 @@ class MapExample extends Component {
               width: 25
             },
             id: 'entered destination'
-          }]
+          }])
         })
         this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
       });
@@ -104,8 +103,8 @@ class MapExample extends Component {
     fetch('http://localhost:3000/allstreets')
       .then((response) => response.json())
       .then((responseJson) => {
-        
-        mainComponent.setState({ annotations: responseJson });
+
+        this.setState({ annotations: this.state.annotations.concat(responseJson) });
 
         //return responseJson;
       })

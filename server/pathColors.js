@@ -1,21 +1,21 @@
 var Promise = require('bluebird');
 var readFile = Promise.promisify(require("fs").readFile);
 
-module.exports = readFile('./crime/interhashScores.json', 'utf-8').then( function(rawNodes) { 
+module.exports = readFile(__dirname + '/crime/interhashScores.json', 'utf-8').then( function(rawNodes) { 
 
     var parsedNodes = JSON.parse(rawNodes);
     var paths = [];
     var path;
-    var streetColors = { 
-      yellow: '#feb24c', 
-      orange: '#fc4e2a', 
+    var streetColors = {
+      yellow: '#feb24c',
+      orange: '#fc4e2a',
       red: '#b10026'
     };
 
     var counter = 0;
 
     for (var key in parsedNodes) {
-    	
+
     	node = parsedNodes[key];
 
     	if (node.edges) {
