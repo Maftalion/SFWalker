@@ -31,7 +31,7 @@ class MapExample extends Component {
     annotations: []
   };
 
-  };
+
   handleStart = (input) => {
     convertGPS(input)
       .then((data) => {
@@ -71,7 +71,7 @@ class MapExample extends Component {
         this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
       });
   };
-  
+
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
     console.log('onRegionDidChange', location);
