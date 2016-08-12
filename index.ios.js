@@ -119,6 +119,7 @@ class MapExample extends Component {
   render() {
     return (
         <View style={styles.container}>
+          <View style={{flex: 1}} />
           <MapView
             ref={map => { this._map = map }}
             style={styles.map}
@@ -140,10 +141,10 @@ class MapExample extends Component {
             <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/walk.gif')}/>
             </Button>
             <Button>
-            <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/bike.gif')}/>
+            <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/bike.gif')}/>
             </Button>
             <Button>
-            <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/taxi.gif')}/>
+            <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/taxi.gif')}/>
             </Button>
           </View>
           <View>
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch'
   },
   map: {
-    flex: 1
+    flex: 30
   },
   scrollView: {
     flex: 1
