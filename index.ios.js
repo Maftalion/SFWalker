@@ -39,21 +39,22 @@ class MapExample extends Component {
   handleStart = (input) => {
     convertGPS(input)
       .then((data) => {
-        this.setState({
-          annotations: [{
-            coordinates: [data.lat, data.lon],
-            title: data.name,
-            type: 'point',
-            annotationImage: {
-              source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-              height: 25,
-              width: 25
-            },
-            id: 'entered location'
-          }]
-        })
+        this.setState(
+          annotations.concat(
+            [{coordinates: [data.lat, data.lon],
+              title: data.name,
+              type: 'point',
+              annotationImage: {
+                source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+                height: 25,
+                width: 25
+              },
+              id: 'entered location'
+            }]
+          )
+        )
         this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
-      });
+      })
   };
 
   handleDest = (input) => {
