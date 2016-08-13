@@ -1,5 +1,4 @@
 var hash = require(__dirname + '/crime/interhashScores.json');
-// var PriorityQueue = require('priorityqueuejs');
 var PriorityQueue = require(__dirname + '/util/priorityQueue.js');
 var fs = require('fs');
 
@@ -38,8 +37,6 @@ module.exports = function(start, dest, attr) {
 
   for (var key in hash) {
     var coords = JSON.parse(key);
-
-    // console.log('haversine', start, typeof start, coords, typeof coords);
     
     var curStartDist = computeHaversine(start, coords);
     if (curStartDist < startDist) {
@@ -73,40 +70,27 @@ module.exports = function(start, dest, attr) {
       distSource = 0;
     }
     hash[key].distSource = distSource;
-    // q.enq({key: key, distSource: distSource});
-    // q.enq(key);
     q.push({key: key, distSource: distSource});
   }
 
-  // console.log('q', q);
-  // console.log(q.content)
-  // for (var i = 0; i < q.content.length; i++) {
-  //   if (q.content[i].distSource === 0) {
-  //     console.log('el', q.content[i]);
-  //   }
-  // }
   var count = 0;
   while (q.size() > 0) {
 
-    // console.log('q');
-    // var cur = q.deq();
     count++;
     cur = q.pop();
-    console.log('cur', count, keycount, cur);
+    // console.log('cur', count, keycount, cur);
 
     if (cur.key === JSON.stringify(dest)) {
       console.log('dest reached');
       var s = [];
       var u = cur.key;
       while (hash[u].prev) {
-        console.log('adding');
         s.unshift(u);
         u = hash[u].prev;
       }
       s.unshift(u);
 
       var jsonPath = [];
-      console.log('s', s);
       for (var x = 0; x < s.length - 1; x++) {
         jsonPath.push({
           type: 'Feature',
@@ -128,27 +112,18 @@ module.exports = function(start, dest, attr) {
         hash[key].prev = undefined;
       }
       return path;
-      // fs.writeFile('path.json', JSON.stringify(path));
-      // throw new Error('found! execution complete');
     }
 
     for (var i = 0; i < hash[cur.key].edges.length; i++) {
-      // var next = hash[cur.key].edges[i];
-      // var alt = q.distSource 
-      // var next = hash[cur].edges[i];
-      // var alt = next.distSource;
       var nextkey = hash[cur.key].edges[i].node;
       var alt = cur.distSource + parseInt(hash[cur.key].edges[i][attr]);
       // console.log('alt', alt, 'nextDistSource', hash[nextkey].distSource)
       if (alt < hash[nextkey].distSource) {
-        console.log('in overwrite');
-        // console.log('prev', hash[nextkey].prev);
+        // console.log('in overwrite');
         hash[nextkey].distSource = alt;
         hash[nextkey].prev = cur.key;
         q.decreaseKey(nextkey, alt);
       }
     }
-    console.log('loop end');
   }
-  console.log('end');
 }
