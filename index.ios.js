@@ -35,8 +35,22 @@ class MapExample extends Component {
   handleStart = (input) => {
     convertGPS(input)
       .then((data) => {
+        var annotations = this.state.annotations.slice();
+        var index = undefined;
+
+        annotations.forEach((feature, i) => {
+          if (feature.id === 'entered location') {
+            index = i;
+          }
+        });
+
+        if (index) {
+          annotations.splice(index, 1);
+        }
+
         this.setState({
-          annotations: this.state.annotations.concat([{
+          start: [data.lat, data.lon],
+          annotations: annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -47,16 +61,34 @@ class MapExample extends Component {
             },
             id: 'entered location'
           }])
-        })
-        this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
+        }, () => {
+          if (!this.state.dest) {
+            this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
+          }
+          this.showRoutes();
+        });
       });
-  };
+  }
 
   handleDest = (input) => {
     convertGPS(input)
       .then((data) => {
+        var annotations = this.state.annotations.slice();
+        var index = undefined;
+
+        annotations.forEach((feature, i) => {
+          if (feature.id === 'entered destination') {
+            index = i;
+          }
+        });
+
+        if (index) {
+          annotations.splice(index, 1);
+        }
+
         this.setState({
-          annotations: this.state.annotations.concat([{
+          dest: [data.lat, data.lon],
+          annotations: annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -67,19 +99,102 @@ class MapExample extends Component {
             },
             id: 'entered destination'
           }])
-        })
-        this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
+        }, () => {
+          if (!this.state.start) {
+            this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
+          }
+          this.showRoutes();
+        });
       });
-  };
+  }
 
+  showRoutes = () => {
+    if (this.state.start && this.state.dest) {
+      fetch('http://localhost:3000/routes', {
+        method: 'post',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          start: [this.state.start[1], this.state.start[0]],
+          dest: [this.state.dest[1], this.state.dest[0]]
+        })
+      })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        responseJson.short.forEach((el) => {
+          [el[0], el[1]] = [el[1], el[0]];
+        });
+        responseJson.safe.forEach((el) => {
+          [el[0], el[1]] = [el[1], el[0]];
+        });
+
+        var annotations = this.state.annotations.slice();
+        var index = undefined;
+        annotations.forEach((feature, i) => {
+          if (feature.id === 'shortRoute') {
+            index = i;
+          }
+        });
+
+        if (index) {
+          annotations.splice(index, 2);
+        }
+
+        this.setState({
+          short: responseJson.short,
+          safe: responseJson.safe,
+          annotations: annotations.concat([{
+            coordinates: responseJson.short,
+            type: 'polyline',
+            strokeColor: '#28B463',
+            strokeWidth: 5,
+            strokeAlpha: 0.7,
+            id: 'shortRoute'
+          }, {
+            coordinates: responseJson.safe,
+            type: 'polyline',
+            strokeColor: '#5DADE2',
+            strokeWidth: 5,
+            strokeAlpha: 0.7,
+            id: 'safeRoute'
+          }])
+        }, () => {
+          var nodes = this.state.short.concat(this.state.safe, [this.state.start, this.state.dest]);
+          var latSW = nodes[0][0]; var latNE = nodes[0][0]; var lonSW = nodes[0][1]; var lonNE = nodes[0][1];
+
+          nodes.forEach(function(node) {
+            if (node[0] > latNE) { latNE = node[0]; }
+            if (node[0] < latSW) { latSW = node[0]; }
+            if (node[1] > lonNE) { lonNE = node[1]; }
+            if (node[1] < lonSW) { lonSW = node[1]; }
+          });
+
+          var spanLat = latNE - latSW;
+          var spanLon = lonNE - lonSW;
+
+          this._map.setVisibleCoordinateBounds(
+            latSW - 0.1 * spanLat,
+            lonSW - 0.1 * spanLon,
+            latNE + 0.1 * spanLat,
+            lonNE + 0.1 * spanLon
+          );
+        });
+      });
+    }
+  }
+
+  
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
     console.log('onRegionDidChange', location);
-  };
+  }
+
   onChangeUserTrackingMode = (userTrackingMode) => {
     this.setState({ userTrackingMode });
     console.log('onChangeUserTrackingMode', userTrackingMode);
-  };
+  }
 
   componentWillMount() {
     this._offlineProgressSubscription = Mapbox.addOfflinePackProgressListener(progress => {
@@ -137,10 +252,12 @@ class MapExample extends Component {
           />
           <View style={{opacity: 5}}>
             <TextInput
+            onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
               style={styles.textInput}
               placeholder="Enter current location"
               />
               <TextInput
+              onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
                 style={styles.textInput}
                 placeholder="Enter Destination"
                 />
