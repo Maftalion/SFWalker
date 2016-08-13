@@ -24,7 +24,6 @@ class MapExample extends Component {
     center: {
       latitude: 37.7836925,
       longitude: -122.4111781
-
     },
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
