@@ -1,7 +1,7 @@
 var Promise = require('bluebird');
 var readFile = Promise.promisify(require("fs").readFile);
 
-module.exports = readFile('./crime/interhashScores.json', 'utf-8').then( function(rawNodes) { 
+module.exports = readFile(__dirname + '/crime/interhashScores.json', 'utf-8').then( function(rawNodes) { 
 
     var parsedNodes = JSON.parse(rawNodes);
     var paths = [];
