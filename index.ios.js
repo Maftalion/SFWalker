@@ -254,9 +254,9 @@ class MapExample extends Component {
             />
           <View>
             <View>
-              <Text style={{height: 20}}/>
+              <Text style={styles.topMargin} />
             </View>
-            <View style={{marginHorizontal: 5}}>
+            <View style={styles.textContainer}>
               <TextInput
               onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
                 style={styles.textInput}
@@ -270,17 +270,22 @@ class MapExample extends Component {
                   placeholderTextColor="black"
                   />
             </View>
-            <View style={{justifyContent: 'space-around', flexDirection: 'row'}}>
+            <View style={styles.buttonContainer}>
               <Button>
-              <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/walk.gif')}/>
+              <Image style={styles.button} source={require('./assets/walk.gif')}/>
               </Button>
               <Button>
-              <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/bike.gif')}/>
+              <Image style={styles.button} source={require('./assets/bike.gif')}/>
               </Button>
               <Button>
-              <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/taxi.gif')}/>
+              <Image style={styles.button} source={require('./assets/taxi.gif')}/>
               </Button>
             </View>
+          </View>
+          <View style={styles.reportButton}>
+            <Button>
+            <Image style={styles.reportImage} source={require('./assets/danger.gif')}/>
+            </Button>
           </View>
         </View>
     );
@@ -288,17 +293,30 @@ class MapExample extends Component {
 }
 
 const styles = StyleSheet.create({
-  bubble: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    paddingHorizontal: 18,
-    paddingVertical: 15,
-    textAlign: 'center',
-    borderRadius: 18
+  reportImage: {
+    width: 50,
+    height: 50,
+    margin: 2
+  },
+  reportButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0
+  },
+  button: {
+    width: 40,
+    height: 40,
+    margin: 5
   },
   buttonContainer: {
-    flexDirection: 'row',
-    marginVertical: 20,
-    backgroundColor: 'transparent',
+    justifyContent: 'space-around',
+    flexDirection: 'row'
+  },
+  textContainer: {
+    marginHorizontal: 5
+  },
+  topMargin: {
+    height: 20
   },
   textInput: {
     height: 30,
