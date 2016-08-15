@@ -7,12 +7,11 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  StatusBar,
   View,
+  Image,
   TextInput,
-  ScrollView
 } from 'react-native';
-
+import Button from 'react-native-button';
 import convertGPS from './src/api';
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
@@ -24,9 +23,8 @@ class MapExample extends Component {
     center: {
       latitude: 37.7836925,
       longitude: -122.4111781
-
     },
-    zoom: 13,
+    zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
     annotations: []
   };
@@ -185,7 +183,7 @@ class MapExample extends Component {
     }
   }
 
-  
+
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
     console.log('onRegionDidChange', location);
@@ -243,24 +241,42 @@ class MapExample extends Component {
             rotateEnabled={true}
             scrollEnabled={true}
             zoomEnabled={true}
+            logoIsHidden={true}
             showsUserLocation={true}
             userTrackingMode={this.state.userTrackingMode}
             annotations={this.state.annotations}
-            annotationsAreImmutable
             onChangeUserTrackingMode={this.onChangeUserTrackingMode}
             onRegionDidChange={this.onRegionDidChange}
-          />
-          <View style={{opacity: 5}}>
-            <TextInput
-            onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
-              style={styles.textInput}
-              placeholder="Enter current location"
-              />
+            />
+          <View>
+            <View>
+              <Text style={{height: 20}}/>
+            </View>
+            <View style={{marginHorizontal: 5}}>
               <TextInput
-              onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
+              onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
                 style={styles.textInput}
-                placeholder="Enter Destination"
+                placeholder="Enter current location"
+                placeholderTextColor="black"
                 />
+                <TextInput
+                onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
+                  style={styles.textInput}
+                  placeholder="Enter Destination"
+                  placeholderTextColor="black"
+                  />
+            </View>
+            <View style={{justifyContent: 'space-around', flexDirection: 'row'}}>
+              <Button>
+              <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/walk.gif')}/>
+              </Button>
+              <Button>
+              <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/bike.gif')}/>
+              </Button>
+              <Button>
+              <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/taxi.gif')}/>
+              </Button>
+            </View>
           </View>
         </View>
     );
@@ -268,21 +284,39 @@ class MapExample extends Component {
 }
 
 const styles = StyleSheet.create({
+  bubble: {
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 18,
+    paddingVertical: 15,
+    textAlign: 'center',
+    borderRadius: 18
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginVertical: 20,
+    backgroundColor: 'transparent',
+  },
   textInput: {
     height: 30,
     textAlign: 'center',
-    borderColor: 'black',
+    borderColor: 'grey',
     borderWidth: 1,
+    borderRadius: 15,
+    marginHorizontal: 8,
+    marginTop: 2,
+    backgroundColor: '#d3d3d3',
+    opacity: .7
   },
   container: {
     flex: 1,
     alignItems: 'stretch'
   },
   map: {
-    flex: 1
-  },
-  scrollView: {
-    flex: 1
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
   }
 });
 
