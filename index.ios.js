@@ -33,7 +33,6 @@ class MapExample extends Component {
     report: false
   };
 
-
   handleStart = (input) => {
     convertGPS(input)
       .then((data) => {
@@ -299,6 +298,28 @@ class MapExample extends Component {
     }
   }
 
+  showReportUI() {
+    if (this.state.report) {
+      return (
+        <View style={styles.buttonContainer}>
+          <View style={styles.bubble}>
+            <Button style={{textAlign: 'center'}}>Report an incident</Button>
+          </View>
+        </View>
+      )
+    }
+  }
+  showReportButton() {
+    if (!this.state.report) {
+      return (
+        <Button
+          onPress={()=> this.handleReport()}>
+            <Image style={styles.reportImage} source={require('./src/assets/danger.gif')} />
+        </Button>
+      )
+    }
+  }
+
   render() {
     return (
         <View style={styles.container}>
@@ -323,15 +344,13 @@ class MapExample extends Component {
               <Text style={styles.topMargin} />
             </View>
               <View style={styles.textContainer}>
-                  {this.showNav()}
+                {this.showNav()}
+                {this.showReportUI()}
               </View>
               {this.showButtons()}
           </View>
           <View style={styles.reportButton}>
-            <Button
-            onPress={()=> this.handleReport()}>
-            <Image style={styles.reportImage} source={require('./src/assets/danger.gif')} />
-            </Button>
+            {this.showReportButton()}
           </View>
         </View>
     );
@@ -376,6 +395,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0
+  },
+  buttonContainer: {
+    position:'absolute',
+    left: 5,
+    right: 5,
+    top: 500,
+    flexDirection: 'row',
+    marginVertical: 20,
+    backgroundColor: 'transparent',
+  },
+  bubble: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 20,
   }
 });
 
