@@ -275,10 +275,10 @@ class MapExample extends Component {
               <Image style={styles.button} source={require('./assets/walk.gif')}/>
               </Button>
               <Button>
-              <Image style={styles.button} source={require('./assets/bike.gif')}/>
+              <Image style={[styles.button, {opacity: .5}]} source={require('./assets/bike.gif')}/>
               </Button>
               <Button>
-              <Image style={styles.button} source={require('./assets/taxi.gif')}/>
+              <Image style={[styles.button, {opacity: .5}]} source={require('./assets/taxi.gif')}/>
               </Button>
             </View>
           </View>
