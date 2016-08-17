@@ -29,11 +29,8 @@ class MapExample extends Component {
     },
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
-    annotations: [{
-      id: 'report',
-      type: 'point',
-      coordinates: [0, 0]
-    }]
+    annotations: [],
+    report: false
   };
 
 
@@ -111,6 +108,24 @@ class MapExample extends Component {
           this.showRoutes();
         });
       });
+  }
+
+  handleReport = () => {
+    let annotations = this.state.annotations;
+    let center = this.state.center;
+    this.setState({
+      report: true,
+      annotations: this.state.annotations.concat([{
+        type: 'point',
+        id: 'report',
+        coordinates: [center.latitude, center.longitude],
+        annotationImage: {
+          source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+          height: 25,
+          width: 25
+        }
+      }])
+    })
   }
 
   showRoutes = () => {
@@ -192,14 +207,28 @@ class MapExample extends Component {
 
 
   onRegionDidChange = (location) => {
-    this.setState({ currentZoom: location.zoomLevel });
     this.setState({
-      pin: {
+      currentZoom: location.zoomLevel,
+      center: {
         latitude: location.latitude,
         longitude: location.longitude
       }
-    })
-    console.log('onRegionDidChange', location);
+     });
+    if (this.state.report) {
+      this.setState({
+        annotations: this.state.annotations.concat([{
+          type: 'point',
+          id: 'report',
+          coordinates: [location.latitude, location.longitude],
+          annotationImage: {
+            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+            height: 25,
+            width: 25
+          }
+        }])
+      })
+    }
+    console.log('onRegionDidChange', this.state.report, location);
   }
 
   onChangeUserTrackingMode = (userTrackingMode) => {
@@ -283,10 +312,9 @@ class MapExample extends Component {
               <Buttons />
           </View>
           <View style={styles.reportButton}>
-            <Button>
-            <Image style={styles.reportImage} source={require('./src/assets/danger.gif')}
-            // onPress={this.setState({navShow: false})}
-            />
+            <Button
+            onPress={()=> this.handleReport()}>
+            <Image style={styles.reportImage} source={require('./src/assets/danger.gif')} />
             </Button>
           </View>
         </View>
