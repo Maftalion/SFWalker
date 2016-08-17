@@ -115,7 +115,7 @@ class MapExample extends Component {
     let center = this.state.center;
     this.setState({
       report: true,
-      annotations: this.state.annotations.concat([{
+      annotations: annotations.concat([{
         type: 'point',
         id: 'report',
         coordinates: [center.latitude, center.longitude],
@@ -272,6 +272,33 @@ class MapExample extends Component {
     this._offlineErrorSubscription.remove();
   }
 
+  showNav() {
+    if (!this.state.report) {
+      return (
+        <View>
+        <TextInput
+          onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
+          style={styles.textInput}
+          placeholder="Enter current location"
+          placeholderTextColor="black"
+          />
+        <TextInput
+          onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
+          style={styles.textInput}
+          placeholder="Enter Destination"
+          placeholderTextColor="black"
+          />
+        </View>
+      )
+    }
+  }
+
+  showButtons() {
+    if(!this.state.report) {
+      return <Buttons />
+    }
+  }
+
   render() {
     return (
         <View style={styles.container}>
@@ -296,20 +323,9 @@ class MapExample extends Component {
               <Text style={styles.topMargin} />
             </View>
               <View style={styles.textContainer}>
-                <TextInput
-                onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
-                  style={styles.textInput}
-                  placeholder="Enter current location"
-                  placeholderTextColor="black"
-                  />
-                  <TextInput
-                  onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
-                    style={styles.textInput}
-                    placeholder="Enter Destination"
-                    placeholderTextColor="black"
-                    />
+                  {this.showNav()}
               </View>
-              <Buttons />
+              {this.showButtons()}
           </View>
           <View style={styles.reportButton}>
             <Button
