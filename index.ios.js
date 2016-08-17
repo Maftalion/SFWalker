@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
+import io from './socket.io'
+
+var socket = io('http://localhost:3000', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
@@ -208,15 +211,16 @@ class MapExample extends Component {
 
   componentDidMount() {
 
-    var mainComponent = this;
+    
 
+    //initialize colored paths on map
+    var mainComponent = this;
     fetch('http://localhost:3000/allstreets')
       .then((response) => response.json())
       .then((responseJson) => {
 
         mainComponent.setState({ annotations: responseJson });
 
-        //return responseJson;
       })
       .catch((error) => {
         console.error(error);

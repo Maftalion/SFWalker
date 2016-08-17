@@ -1,6 +1,8 @@
 var express = require('express');
 var parser = require('body-parser');
 var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var Incident = require('./models/model');
 
 var generatePathColors = require('./pathColors');
@@ -14,9 +16,13 @@ app.use(parser.json());
 
 var port = 3000;
 
-app.listen(process.env.PORT || port, function() {
+http.listen(process.env.PORT || port, function() {
   console.log('Listening on port ' + port);
 })
+
+io.on('connection', function(socket){
+  console.log('a user connected!');
+});
 
 app.get('/allstreets', function(req, res) {
   generatePathColors
