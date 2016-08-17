@@ -1,6 +1,5 @@
 'use strict';
 /* eslint no-console: 0 */
-
 import React, { Component } from 'react';
 import Mapbox, { MapView } from 'react-native-mapbox-gl';
 import {
@@ -14,6 +13,7 @@ import {
 import Button from 'react-native-button';
 import convertGPS from './src/api';
 import io from './socket.io'
+import Buttons from './src/components/buttons'
 
 var socket = io('http://localhost:3000', { transports: ['websocket'] } );
 
@@ -29,7 +29,11 @@ class MapExample extends Component {
     },
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
-    annotations: []
+    annotations: [{
+      id: 'report',
+      type: 'point',
+      coordinates: [0, 0]
+    }]
   };
 
 
@@ -189,6 +193,12 @@ class MapExample extends Component {
 
   onRegionDidChange = (location) => {
     this.setState({ currentZoom: location.zoomLevel });
+    this.setState({
+      pin: {
+        latitude: location.latitude,
+        longitude: location.longitude
+      }
+    })
     console.log('onRegionDidChange', location);
   }
 
@@ -211,7 +221,7 @@ class MapExample extends Component {
 
   componentDidMount() {
 
-    
+
 
     //initialize colored paths on map
     var mainComponent = this;
@@ -256,35 +266,27 @@ class MapExample extends Component {
             <View>
               <Text style={styles.topMargin} />
             </View>
-            <View style={styles.textContainer}>
-              <TextInput
-              onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
-                style={styles.textInput}
-                placeholder="Enter current location"
-                placeholderTextColor="black"
-                />
+              <View style={styles.textContainer}>
                 <TextInput
-                onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
+                onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
                   style={styles.textInput}
-                  placeholder="Enter Destination"
+                  placeholder="Enter current location"
                   placeholderTextColor="black"
                   />
-            </View>
-            <View style={styles.buttonContainer}>
-              <Button>
-              <Image style={styles.button} source={require('./assets/walk.gif')}/>
-              </Button>
-              <Button>
-              <Image style={[styles.button, {opacity: .5}]} source={require('./assets/bike.gif')}/>
-              </Button>
-              <Button>
-              <Image style={[styles.button, {opacity: .5}]} source={require('./assets/taxi.gif')}/>
-              </Button>
-            </View>
+                  <TextInput
+                  onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
+                    style={styles.textInput}
+                    placeholder="Enter Destination"
+                    placeholderTextColor="black"
+                    />
+              </View>
+              <Buttons />
           </View>
           <View style={styles.reportButton}>
             <Button>
-            <Image style={styles.reportImage} source={require('./assets/danger.gif')}/>
+            <Image style={styles.reportImage} source={require('./src/assets/danger.gif')}
+            // onPress={this.setState({navShow: false})}
+            />
             </Button>
           </View>
         </View>
@@ -302,15 +304,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0
-  },
-  button: {
-    width: 40,
-    height: 40,
-    margin: 5
-  },
-  buttonContainer: {
-    justifyContent: 'space-around',
-    flexDirection: 'row'
   },
   textContainer: {
     marginHorizontal: 5
