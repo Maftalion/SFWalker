@@ -1,6 +1,5 @@
 'use strict';
 /* eslint no-console: 0 */
-
 import React, { Component } from 'react';
 import Mapbox, { MapView } from 'react-native-mapbox-gl';
 import {
@@ -9,11 +8,15 @@ import {
   Text,
   View,
   Image,
+  ScrollView,
   TextInput,
+  TouchableWithoutFeedback
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
 import io from './socket.io'
+import Buttons from './src/components/buttons'
+import { RadioButtons } from 'react-native-radio-buttons'
 
 var socket = io('http://localhost:3000', { transports: ['websocket'] } );
 
@@ -29,9 +32,9 @@ class MapExample extends Component {
     },
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
-    annotations: []
+    annotations: [],
+    view: 1,
   };
-
 
   handleStart = (input) => {
     convertGPS(input)
@@ -107,6 +110,24 @@ class MapExample extends Component {
           this.showRoutes();
         });
       });
+  }
+
+  handleReport = () => {
+    let annotations = this.state.annotations;
+    let center = this.state.center;
+    this.setState({
+      view: 2,
+      annotations: annotations.concat([{
+        type: 'point',
+        id: 'report',
+        coordinates: [center.latitude, center.longitude],
+        annotationImage: {
+          source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+          height: 25,
+          width: 25
+        }
+      }])
+    })
   }
 
   showRoutes = () => {
@@ -188,7 +209,27 @@ class MapExample extends Component {
 
 
   onRegionDidChange = (location) => {
-    this.setState({ currentZoom: location.zoomLevel });
+    this.setState({
+      currentZoom: location.zoomLevel,
+      center: {
+        latitude: location.latitude,
+        longitude: location.longitude
+      }
+     });
+    if (this.state.view === 2) {
+      this.setState({
+        annotations: this.state.annotations.concat([{
+          type: 'point',
+          id: 'report',
+          coordinates: [location.latitude, location.longitude],
+          annotationImage: {
+            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+            height: 25,
+            width: 25
+          }
+        }])
+      })
+    }
     console.log('onRegionDidChange', location);
   }
 
@@ -210,8 +251,9 @@ class MapExample extends Component {
   }
 
   componentDidMount() {
-
-    
+    socket.on('appendReport', function(event) {
+      console.log('append incident to map', event);
+    });
 
     //initialize colored paths on map
     var mainComponent = this;
@@ -231,6 +273,186 @@ class MapExample extends Component {
     this._offlineProgressSubscription.remove();
     this._offlineMaxTilesSubscription.remove();
     this._offlineErrorSubscription.remove();
+  }
+
+  showNav() {
+    if (this.state.view === 1) {
+      return (
+        <View>
+        <TextInput
+          onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
+          style={styles.textInput}
+          placeholder="Enter current location"
+          placeholderTextColor="black"
+          />
+        <TextInput
+          onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
+          style={styles.textInput}
+          placeholder="Enter Destination"
+          placeholderTextColor="black"
+          />
+        </View>
+      )
+    }
+  }
+  renderCheckList() {
+    if (this.state.view === 3) {
+      const options = [
+        'Theft',
+        'Public Disturbance',
+        'Assault/Battery',
+        'Drunkenness/Drug Use',
+        'Sex Offense',
+        'Suspicious Behavior'
+      ];
+      function setSelectedOption(checkListOption){
+        this.setState({
+          checkListOption,
+        });
+      }
+      function renderOption( option, selected, onSelect, index) {
+
+        const textStyle = {
+          paddingTop: 10,
+          paddingBottom: 10,
+          color: 'black',
+          flex: 1,
+          fontSize: 14,
+        };
+        const baseStyle = {
+          flexDirection: 'row',
+        };
+        var style;
+        var checkMark;
+
+        if (index > 0) {
+          style = [baseStyle, {
+            borderTopColor: '#eeeeee',
+            borderTopWidth: 1,
+          }];
+        } else {
+          style = baseStyle;
+        }
+
+        if (selected) {
+          checkMark = <Text style={{
+            flex: 0.1,
+            color: '#007AFF',
+            fontWeight: 'bold',
+            paddingTop: 8,
+            fontSize: 20,
+            alignSelf: 'center',
+          }}>✓</Text>
+        }
+
+        return (
+          <TouchableWithoutFeedback onPress={onSelect} key={index}>
+          <View style={style}>
+          <Text style={textStyle}>{option}</Text>
+          {checkMark}
+          </View>
+          </TouchableWithoutFeedback>
+        )
+      }
+
+      function renderContainer(options){
+        return (
+          <View style={{
+            backgroundColor: 'white',
+            paddingLeft: 20,
+            borderTopWidth: 1,
+            borderTopColor: '#cccccc',
+            borderBottomWidth: 1,
+            borderBottomColor: '#cccccc'
+          }}>
+          {options}
+          </View>
+        )
+      }
+
+      return (
+        <View style={{flex: 1}}>
+        <View style={{marginTop: 10, backgroundColor: 'white'}}>
+        <Text style={{padding: 20, fontWeight:'bold', textAlign:'center'}}>Report Incident</Text>
+
+        <View style={{
+          backgroundColor: '#eeeeee',
+          paddingTop: 5,
+          paddingBottom: 5,
+        }}>
+        <Text style={{
+          color: '#555555',
+          paddingLeft: 20,
+          marginBottom: 5,
+          marginTop: 5,
+          fontSize: 12,
+          textAlign: 'center'
+        }}>Categories</Text>
+        <RadioButtons
+        options={ options }
+        onSelection={ setSelectedOption.bind(this) }
+        selectedOption={ this.state.checkListOption }
+        renderOption={ renderOption }
+        renderContainer={ renderContainer }
+        />
+        </View>
+        <Text style={{
+          margin: 20, textAlign: 'center'
+        }}>Selected: {this.state.checkListOption || 'none'}</Text>
+        </View>
+        <View style={[styles.bubble, {margin: 10}]}>
+          <Button
+          style={{textAlign: 'center'}}
+          onPress={()=> this.submitIncident()}>
+            Submit
+          </Button>
+        </View>
+        </View>)
+    }
+  }
+
+  submitIncident() {
+    this.setState({view: 1})
+    console.log('incident sent to backend')
+    socket.emit('report', {category: this.state.checkListOption, coords: [this.state.center.latitude, this.state.center.longitude]});
+  }
+
+  showButtons() {
+    if (this.state.view === 1) {
+      return <Buttons />
+    }
+  }
+
+  showReportUI() {
+    if (this.state.view === 2) {
+      return (
+        <View style={styles.buttonContainer}>
+          <View style={styles.bubble}>
+            <Button
+            style={{textAlign: 'center'}}
+            onPress={()=> this.reportIncindent()}>
+              Report an incident
+            </Button>
+          </View>
+        </View>
+      )
+    }
+  }
+
+  reportIncindent() {
+    const center = this.state.center
+    this.setState({view: 3})
+  }
+
+  showReportButton() {
+    if (this.state.view === 1) {
+      return (
+        <Button
+          onPress={()=> this.handleReport()}>
+            <Image style={styles.reportImage} source={require('./src/assets/danger.gif')} />
+        </Button>
+      )
+    }
   }
 
   render() {
@@ -254,51 +476,43 @@ class MapExample extends Component {
             />
           <View>
             <View>
-              <Text style={{height: 20}}/>
+              <Text style={styles.topMargin} />
             </View>
-            <View style={{marginHorizontal: 5}}>
-              <TextInput
-              onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
-                style={styles.textInput}
-                placeholder="Enter current location"
-                placeholderTextColor="black"
-                />
-                <TextInput
-                onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
-                  style={styles.textInput}
-                  placeholder="Enter Destination"
-                  placeholderTextColor="black"
-                  />
-            </View>
-            <View style={{justifyContent: 'space-around', flexDirection: 'row'}}>
-              <Button>
-              <Image style={{width: 40, height: 40, margin: 5}} source={require('./assets/walk.gif')}/>
-              </Button>
-              <Button>
-              <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/bike.gif')}/>
-              </Button>
-              <Button>
-              <Image style={{width: 40, height: 40, margin: 5, opacity: 0.5}} source={require('./assets/taxi.gif')}/>
-              </Button>
-            </View>
+              <View style={styles.textContainer}>
+                {this.showNav()}
+                {this.showReportUI()}
+                <View style={{opacity: 0.9}}>
+                  <ScrollView style={{backgroundColor: '#eeeeee'}}>
+                    {this.renderCheckList()}
+                  </ScrollView>
+                </View>
+              </View>
+              {this.showButtons()}
+          </View>
+          <View style={styles.reportButton}>
+            {this.showReportButton()}
           </View>
         </View>
-    );
+    )
   }
 }
 
 const styles = StyleSheet.create({
-  bubble: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    paddingHorizontal: 18,
-    paddingVertical: 15,
-    textAlign: 'center',
-    borderRadius: 18
+  reportImage: {
+    width: 50,
+    height: 50,
+    margin: 2
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    marginVertical: 20,
-    backgroundColor: 'transparent',
+  reportButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0
+  },
+  textContainer: {
+    marginHorizontal: 5
+  },
+  topMargin: {
+    height: 20
   },
   textInput: {
     height: 30,
@@ -321,6 +535,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0
+  },
+  buttonContainer: {
+    position:'absolute',
+    left: 5,
+    right: 5,
+    top: 500,
+    flexDirection: 'row',
+    marginVertical: 20,
+    backgroundColor: 'transparent',
+  },
+  bubble: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 20,
   }
 });
 

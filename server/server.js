@@ -12,16 +12,20 @@ module.exports = app;
 
 app.use(parser.json());
 
-//transforms nodes from interhashScores.json into array of objects expected by MapBox annotations, in order to draw street colors 
+//transforms nodes from interhashScores.json into array of objects expected by MapBox annotations, in order to draw street colors
 
-var port = 3000;
+var port = process.env.PORT || 3000;
 
-http.listen(process.env.PORT || port, function() {
+http.listen(port, function() {
   console.log('Listening on port ' + port);
 })
 
 io.on('connection', function(socket){
   console.log('a user connected!');
+  socket.on('report', function (data) {
+    console.log('incident recieved on backend')
+    socket.emit('appendReport', data);
+  });
 });
 
 app.get('/allstreets', function(req, res) {
