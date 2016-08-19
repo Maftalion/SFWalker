@@ -252,7 +252,7 @@ class MapExample extends Component {
 
   componentDidMount() {
     socket.on('appendReport', function(event) {
-      console.log(event);
+      console.log('append incident to map', event);
     });
 
     //initialize colored paths on map
@@ -397,13 +397,25 @@ class MapExample extends Component {
         />
         </View>
         <Text style={{
-          margin: 20,
+          margin: 20, textAlign: 'center'
         }}>Selected: {this.state.checkListOption || 'none'}</Text>
+        </View>
+        <View style={[styles.bubble, {margin: 10}]}>
+          <Button
+          style={{textAlign: 'center'}}
+          onPress={()=> this.submitIncident()}>
+            Submit
+          </Button>
         </View>
         </View>)
     }
   }
 
+  submitIncident() {
+    this.setState({view: 1})
+    console.log('incident sent to backend')
+    socket.emit('report', {category: this.state.checkListOption, coords: [this.state.center.latitude, this.state.center.longitude]});
+  }
 
   showButtons() {
     if (this.state.view === 1) {
@@ -430,7 +442,6 @@ class MapExample extends Component {
   reportIncindent() {
     const center = this.state.center
     this.setState({view: 3})
-    socket.emit('report', {coords: [center.latitude, center.longitude]});
   }
 
   showReportButton() {

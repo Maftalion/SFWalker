@@ -23,6 +23,7 @@ http.listen(port, function() {
 io.on('connection', function(socket){
   console.log('a user connected!');
   socket.on('report', function (data) {
+    console.log('incident recieved on backend')
     socket.emit('appendReport', data);
   });
 });
