@@ -54,7 +54,7 @@ class MapExample extends Component {
 
         this.setState({
           start: [data.lat, data.lon],
-          annotations: annotations.concat([{
+          annotations: [ ...annotations, {
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -64,7 +64,7 @@ class MapExample extends Component {
               width: 25
             },
             id: 'entered location'
-          }])
+          }]
         }, () => {
           if (!this.state.dest) {
             this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
@@ -92,7 +92,7 @@ class MapExample extends Component {
 
         this.setState({
           dest: [data.lat, data.lon],
-          annotations: annotations.concat([{
+          annotations: [...annotations, {
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -102,7 +102,7 @@ class MapExample extends Component {
               width: 25
             },
             id: 'entered destination'
-          }])
+          }]
         }, () => {
           if (!this.state.start) {
             this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
@@ -117,7 +117,7 @@ class MapExample extends Component {
     let center = this.state.center;
     this.setState({
       view: 2,
-      annotations: annotations.concat([{
+      annotations: [...annotations, {
         type: 'point',
         id: 'report',
         coordinates: [center.latitude, center.longitude],
@@ -126,7 +126,7 @@ class MapExample extends Component {
           height: 25,
           width: 25
         }
-      }])
+      }]
     })
   }
 
@@ -167,7 +167,7 @@ class MapExample extends Component {
         this.setState({
           short: responseJson.short,
           safe: responseJson.safe,
-          annotations: annotations.concat([{
+          annotations: [...annotations, {
             coordinates: responseJson.short,
             type: 'polyline',
             strokeColor: '#28B463',
@@ -181,7 +181,7 @@ class MapExample extends Component {
             strokeWidth: 5,
             strokeAlpha: 0.7,
             id: 'safeRoute'
-          }])
+          }]
         }, () => {
           var nodes = this.state.short.concat(this.state.safe, [this.state.start, this.state.dest]);
           var latSW = nodes[0][0]; var latNE = nodes[0][0]; var lonSW = nodes[0][1]; var lonNE = nodes[0][1];
@@ -218,7 +218,7 @@ class MapExample extends Component {
      });
     if (this.state.view === 2) {
       this.setState({
-        annotations: this.state.annotations.concat([{
+        annotations: [...this.state.annotations, {
           type: 'point',
           id: 'report',
           coordinates: [location.latitude, location.longitude],
@@ -227,8 +227,8 @@ class MapExample extends Component {
             height: 25,
             width: 25
           }
-        }])
-      });
+        }]
+      })
     }
     console.log('onRegionDidChange', location);
   }
@@ -444,7 +444,7 @@ class MapExample extends Component {
     this.setState({view: 1})
     console.log('incident sent to backend')
     socket.emit('report', {
-      category: this.state.checkListOption, 
+      category: this.state.checkListOption,
       coords: [this.state.center.latitude, this.state.center.longitude]
     });
   }
@@ -492,6 +492,7 @@ class MapExample extends Component {
         <View style={styles.container}>
           <MapView
             ref={map => { this._map = map }}
+            annotationsAreImmutable	= {true}
             style={styles.map}
             initialCenterCoordinate={this.state.center}
             initialZoomLevel={this.state.zoom}
