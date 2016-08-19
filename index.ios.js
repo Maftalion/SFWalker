@@ -8,12 +8,15 @@ import {
   Text,
   View,
   Image,
+  ScrollView,
   TextInput,
+  TouchableWithoutFeedback
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
 import io from './socket.io'
 import Buttons from './src/components/buttons'
+import { RadioButtons } from 'react-native-radio-buttons'
 
 var socket = io('http://localhost:3000', { transports: ['websocket'] } );
 
@@ -30,7 +33,7 @@ class MapExample extends Component {
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
     annotations: [],
-    report: false
+    view: 1,
   };
 
   handleStart = (input) => {
@@ -113,7 +116,7 @@ class MapExample extends Component {
     let annotations = this.state.annotations;
     let center = this.state.center;
     this.setState({
-      report: true,
+      view: 2,
       annotations: annotations.concat([{
         type: 'point',
         id: 'report',
@@ -213,7 +216,7 @@ class MapExample extends Component {
         longitude: location.longitude
       }
      });
-    if (this.state.report) {
+    if (this.state.view === 2) {
       this.setState({
         annotations: this.state.annotations.concat([{
           type: 'point',
@@ -227,7 +230,7 @@ class MapExample extends Component {
         }])
       })
     }
-    console.log('onRegionDidChange', this.state.report, location);
+    console.log('onRegionDidChange', location);
   }
 
   onChangeUserTrackingMode = (userTrackingMode) => {
@@ -248,8 +251,9 @@ class MapExample extends Component {
   }
 
   componentDidMount() {
-
-
+    socket.on('appendReport', function(event) {
+      console.log(event);
+    });
 
     //initialize colored paths on map
     var mainComponent = this;
@@ -272,7 +276,7 @@ class MapExample extends Component {
   }
 
   showNav() {
-    if (!this.state.report) {
+    if (this.state.view === 1) {
       return (
         <View>
         <TextInput
@@ -291,26 +295,146 @@ class MapExample extends Component {
       )
     }
   }
+  renderCheckList() {
+    if (this.state.view === 3) {
+      const options = [
+        'Theft',
+        'Public Disturbance',
+        'Assault/Battery',
+        'Drunkenness/Drug Use',
+        'Sex Offense',
+        'Suspicious Behavior'
+      ];
+      function setSelectedOption(checkListOption){
+        this.setState({
+          checkListOption,
+        });
+      }
+      function renderOption( option, selected, onSelect, index) {
+
+        const textStyle = {
+          paddingTop: 10,
+          paddingBottom: 10,
+          color: 'black',
+          flex: 1,
+          fontSize: 14,
+        };
+        const baseStyle = {
+          flexDirection: 'row',
+        };
+        var style;
+        var checkMark;
+
+        if (index > 0) {
+          style = [baseStyle, {
+            borderTopColor: '#eeeeee',
+            borderTopWidth: 1,
+          }];
+        } else {
+          style = baseStyle;
+        }
+
+        if (selected) {
+          checkMark = <Text style={{
+            flex: 0.1,
+            color: '#007AFF',
+            fontWeight: 'bold',
+            paddingTop: 8,
+            fontSize: 20,
+            alignSelf: 'center',
+          }}>✓</Text>
+        }
+
+        return (
+          <TouchableWithoutFeedback onPress={onSelect} key={index}>
+          <View style={style}>
+          <Text style={textStyle}>{option}</Text>
+          {checkMark}
+          </View>
+          </TouchableWithoutFeedback>
+        )
+      }
+
+      function renderContainer(options){
+        return (
+          <View style={{
+            backgroundColor: 'white',
+            paddingLeft: 20,
+            borderTopWidth: 1,
+            borderTopColor: '#cccccc',
+            borderBottomWidth: 1,
+            borderBottomColor: '#cccccc'
+          }}>
+          {options}
+          </View>
+        )
+      }
+
+      return (
+        <View style={{flex: 1}}>
+        <View style={{marginTop: 10, backgroundColor: 'white'}}>
+        <Text style={{padding: 20, fontWeight:'bold', textAlign:'center'}}>Report Incident</Text>
+
+        <View style={{
+          backgroundColor: '#eeeeee',
+          paddingTop: 5,
+          paddingBottom: 5,
+        }}>
+        <Text style={{
+          color: '#555555',
+          paddingLeft: 20,
+          marginBottom: 5,
+          marginTop: 5,
+          fontSize: 12,
+          textAlign: 'center'
+        }}>Categories</Text>
+        <RadioButtons
+        options={ options }
+        onSelection={ setSelectedOption.bind(this) }
+        selectedOption={ this.state.checkListOption }
+        renderOption={ renderOption }
+        renderContainer={ renderContainer }
+        />
+        </View>
+        <Text style={{
+          margin: 20,
+        }}>Selected: {this.state.checkListOption || 'none'}</Text>
+        </View>
+        </View>)
+    }
+  }
+
 
   showButtons() {
-    if(!this.state.report) {
+    if (this.state.view === 1) {
       return <Buttons />
     }
   }
 
   showReportUI() {
-    if (this.state.report) {
+    if (this.state.view === 2) {
       return (
         <View style={styles.buttonContainer}>
           <View style={styles.bubble}>
-            <Button style={{textAlign: 'center'}}>Report an incident</Button>
+            <Button
+            style={{textAlign: 'center'}}
+            onPress={()=> this.reportIncindent()}>
+              Report an incident
+            </Button>
           </View>
         </View>
       )
     }
   }
+
+  reportIncindent() {
+    const center = this.state.center
+    this.setState({view: 3})
+    socket.emit('report', {coords: [center.latitude, center.longitude]});
+  }
+
   showReportButton() {
-    if (!this.state.report) {
+    if (this.state.view === 1) {
       return (
         <Button
           onPress={()=> this.handleReport()}>
@@ -346,6 +470,11 @@ class MapExample extends Component {
               <View style={styles.textContainer}>
                 {this.showNav()}
                 {this.showReportUI()}
+                <View style={{opacity: 0.9}}>
+                  <ScrollView style={{backgroundColor: '#eeeeee'}}>
+                    {this.renderCheckList()}
+                  </ScrollView>
+                </View>
               </View>
               {this.showButtons()}
           </View>
@@ -353,7 +482,7 @@ class MapExample extends Component {
             {this.showReportButton()}
           </View>
         </View>
-    );
+    )
   }
 }
 
