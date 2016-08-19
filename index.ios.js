@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
-import io from './socket.io'
+import io from 'socket.io-client/socket.io'
 import Buttons from './src/components/buttons'
 import { RadioButtons } from 'react-native-radio-buttons'
 
