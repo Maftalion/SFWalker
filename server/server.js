@@ -22,9 +22,28 @@ http.listen(port, function() {
 
 io.on('connection', function(socket){
   console.log('a user connected!');
+
   socket.on('report', function (data) {
     console.log('incident recieved on backend')
-    socket.emit('appendReport', data);
+  
+    //create new object to write to postgres
+    var newIncident = {
+      category: data.category,
+      datetime: new Date(),
+      latitude: data.coords[0],
+      longitude: data.coords[1]
+    };
+
+    //write to postgres
+    Incident.create(newIncident).then(function(incident) {
+      console.log('new incident saved');
+      
+      //emit incident back to all users
+      socket.emit('appendReport', incident);
+    });
+
+
+
   });
 });
 
@@ -69,13 +88,4 @@ app.get('/incident', function(req, res) {
     res.send(JSON.stringify(incidents));
   });
 
-});
-
-app.post('/incident', function(req, res) {
-  console.log('/incident post route');
-  //need to parse JSON from req.body
-
-  Incident.create({ category: 'robbery', datetime: new Date(), latitude: 37.7836925, longitude: -122.4111781 }).then(function(incident) {
-    console.log('new incident saved');
-  });
 });

@@ -32,7 +32,7 @@ module.exports = readFile(__dirname + '/crime/interhashScores.json', 'utf-8').th
 	            type: 'polyline',
 	            strokeWidth: 4,
 	            strokeAlpha: 0.4,
-	            id: counter.toString()
+	            id: 'path' + counter.toString()
 	          };
 
 	          if (node.edges[edge].walkDangerScore < 23.2) {

@@ -228,7 +228,7 @@ class MapExample extends Component {
             width: 25
           }
         }])
-      })
+      });
     }
     console.log('onRegionDidChange', location);
   }
@@ -251,12 +251,26 @@ class MapExample extends Component {
   }
 
   componentDidMount() {
-    socket.on('appendReport', function(event) {
-      console.log('append incident to map', event);
-    });
+   const comp = this;
+  
+   socket.on('appendReport', function(event) {
+     comp.setState({
+       annotations: [...comp.state.annotations, {
+         type: 'point',
+         id: `report:${Date.now()}`,
+         coordinates: [comp.state.center.latitude, comp.state.center.longitude],
+         annotationImage: {
+           source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+           height: 25,
+           width: 25
+         }
+       }]
+     })
+     console.log('append incident to map', event);
+   });
 
-    //initialize colored paths on map
     var mainComponent = this;
+    //fetch street colors
     fetch('http://localhost:3000/allstreets')
       .then((response) => response.json())
       .then((responseJson) => {
@@ -267,6 +281,18 @@ class MapExample extends Component {
       .catch((error) => {
         console.error(error);
       });
+
+      //fetch last 24-hours of reported incidents
+      // fetch('http://localhost:3000/incidents')
+      // .then((response) => response.json())
+      // .then((responseJson) => {
+
+      //   //mainComponent.setState({ annotations: responseJson });
+
+      // })
+      // .catch((error) => {
+      //   console.error(error);
+      // });
   }
 
   componentWillUnmount() {
@@ -414,7 +440,10 @@ class MapExample extends Component {
   submitIncident() {
     this.setState({view: 1})
     console.log('incident sent to backend')
-    socket.emit('report', {category: this.state.checkListOption, coords: [this.state.center.latitude, this.state.center.longitude]});
+    socket.emit('report', {
+      category: this.state.checkListOption, 
+      coords: [this.state.center.latitude, this.state.center.longitude]
+    });
   }
 
   showButtons() {
