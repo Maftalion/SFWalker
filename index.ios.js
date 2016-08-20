@@ -251,25 +251,26 @@ class MapExample extends Component {
   }
 
   componentDidMount() {
-   const comp = this;
-  
+   const mainComponent = this;
+
    socket.on('appendReport', function(event) {
-     comp.setState({
-       annotations: [...comp.state.annotations, {
+
+    console.log(event.latitude, event.longitude);
+    mainComponent.setState({
+       annotations: [...mainComponent.state.annotations, {
          type: 'point',
-         id: `report:${Date.now()}`,
-         coordinates: [comp.state.center.latitude, comp.state.center.longitude],
+         id: `report:${event.id}`,
+         coordinates: [event.latitude, event.longitude],
          annotationImage: {
            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
            height: 25,
            width: 25
          }
        }]
-     })
+     });
      console.log('append incident to map', event);
    });
 
-    var mainComponent = this;
     //fetch street colors
     fetch('http://localhost:3000/allstreets')
       .then((response) => response.json())
@@ -283,16 +284,18 @@ class MapExample extends Component {
       });
 
       //fetch last 24-hours of reported incidents
-      // fetch('http://localhost:3000/incidents')
-      // .then((response) => response.json())
-      // .then((responseJson) => {
+      fetch('http://localhost:3000/incidents')
+      .then((response) => response.json())
+      .then((responseJson) => {
 
-      //   //mainComponent.setState({ annotations: responseJson });
+        mainComponent.setState({
+           annotations: mainComponent.state.annotations.concat(responseJson)
+         });
 
-      // })
-      // .catch((error) => {
-      //   console.error(error);
-      // });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   componentWillUnmount() {

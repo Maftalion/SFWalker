@@ -4,6 +4,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var Incident = require('./models/model');
+var _ = require('underscore');
 
 var generatePathColors = require('./pathColors');
 var getRoutes = require('./dijkstra.js');
@@ -72,7 +73,7 @@ app.post('/routes', function(req, res) {
   }));
 })
 
-app.get('/incident', function(req, res) {
+app.get('/incidents', function(req, res) {
   console.log('/incident get route');
   Incident.findAll({
     where: {
@@ -82,10 +83,25 @@ app.get('/incident', function(req, res) {
       }
     }
   }).then( function (incidents) {
-    console.log(incidents);
+
+    var data = [];
+    _.each(incidents, function(incident){ 
+      var obj = {
+        type: 'point',
+        id: 'report:'+incident.id.toString(),
+        coordinates: [incident.latitude, incident.longitude],
+        annotationImage: {
+           source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+           height: 25,
+           width: 25
+         }
+      }
+      data.push(obj);
+
+    });
     res.type('application/json');
     res.status(200);
-    res.send(JSON.stringify(incidents));
+    res.send(data);
   });
 
 });
