@@ -10,6 +10,7 @@
     "bluebird": "^3.4.1",
     "express": "^4.14.0",
     "json2csv": "^3.6.3",
+    "moment": "^2.14.1",
     "pg": "^6.1.0",
     "react": "15.2.1",
     "react-native": "0.31.0",

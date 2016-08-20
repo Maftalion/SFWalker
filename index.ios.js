@@ -14,10 +14,10 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
-import io from 'socket.io-client/socket.io'
-import Buttons from './src/components/buttons'
-import { RadioButtons } from 'react-native-radio-buttons'
-
+import io from 'socket.io-client/socket.io';
+import Buttons from './src/components/buttons';
+import { RadioButtons } from 'react-native-radio-buttons';
+import moment from 'moment';
 var socket = io('http://localhost:3000', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
@@ -254,10 +254,11 @@ class MapExample extends Component {
    const mainComponent = this;
 
    socket.on('appendReport', function(event) {
-
-    console.log(event.latitude, event.longitude);
+    const time = moment().format('MMMM Do YYYY, h:mm:ss a');
     mainComponent.setState({
        annotations: [...mainComponent.state.annotations, {
+         title: event.category,
+         subtitle: time,
          type: 'point',
          id: `report:${event.id}`,
          coordinates: [event.latitude, event.longitude],
