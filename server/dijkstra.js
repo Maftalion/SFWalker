@@ -1,4 +1,6 @@
-var hash = require(__dirname + '/crime/interhashScores.json');
+// var hash = require(__dirname + '/crime/sfinterhashScores.json');
+// var hash = require(__dirname + '/crime/sfinterhashScoresCrimeDistance.json');
+var hash = require(__dirname + '/crime/sfRoadsInterhashScoresCrimeDistance.json');
 var PriorityQueue = require(__dirname + '/util/priorityQueue.js');
 var fs = require('fs');
 
@@ -90,23 +92,39 @@ module.exports = function(start, dest, attr) {
       }
       s.unshift(u);
 
-      var jsonPath = [];
-      for (var x = 0; x < s.length - 1; x++) {
-        jsonPath.push({
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: [JSON.parse(s[x]), JSON.parse(s[x + 1])]
-          }
-        });
-      }
-      console.log(JSON.stringify(jsonPath));
+      // var jsonPath = [];
+      // for (var x = 0; x < s.length - 1; x++) {
+      //   jsonPath.push({
+      //     type: 'Feature',
+      //     properties: {},
+      //     geometry: {
+      //       type: 'LineString',
+      //       coordinates: [JSON.parse(s[x]), JSON.parse(s[x + 1])]
+      //     }
+      //   });
+      // }
+      // console.log(JSON.stringify(jsonPath));
 
       var path = [];
-      for (var x = 0; x < s.length; x++) {
+      for (var x = 0; x < s.length - 1; x++) {
         path.push(JSON.parse(s[x]));
+        var intermediatePath = undefined;
+        console.log('x', hash[s[x]].edges);
+        for (var y = 0; y < hash[s[x]].edges.length; y++) {
+          console.log('y', hash[s[x]].edges[y].node, s[x + 1]);
+          if (hash[s[x]].edges[y].node === s[x + 1] && (!intermediatePath || hash[s[x]].edges[y][attr] < edgeWeight)) {
+            console.log('writing');
+            intermediatePath = hash[s[x]].edges[y].path;
+            edgeWeight = hash[s[x]].edges[y][attr];
+            console.log('inter', intermediatePath, edgeWeight);
+          }
+        }
+        path = path.concat(intermediatePath);
       }
+      path.push(JSON.parse(s[s.length - 1]));
+
+      console.log('lengths', s.length, path.length);
+
       console.log(JSON.stringify(path));
       for (var key in hash) {
         hash[key].prev = undefined;
@@ -116,13 +134,16 @@ module.exports = function(start, dest, attr) {
 
     for (var i = 0; i < hash[cur.key].edges.length; i++) {
       var nextkey = hash[cur.key].edges[i].node;
-      var alt = cur.distSource + parseInt(hash[cur.key].edges[i][attr]);
-      // console.log('alt', alt, 'nextDistSource', hash[nextkey].distSource)
-      if (alt < hash[nextkey].distSource) {
-        // console.log('in overwrite');
-        hash[nextkey].distSource = alt;
-        hash[nextkey].prev = cur.key;
-        q.decreaseKey(nextkey, alt);
+
+      if (hash[nextkey]) {
+        var alt = cur.distSource + parseInt(hash[cur.key].edges[i][attr]);
+        // console.log('alt', alt, 'nextDistSource', hash[nextkey].distSource)
+        if (alt < hash[nextkey].distSource) {
+          // console.log('in overwrite');
+          hash[nextkey].distSource = alt;
+          hash[nextkey].prev = cur.key;
+          q.decreaseKey(nextkey, alt);
+        }
       }
     }
   }
