@@ -230,25 +230,8 @@ class MapExample extends Component {
         }]
       })
     }
-    console.log('onRegionDidChange', location);
   }
 
-  onChangeUserTrackingMode = (userTrackingMode) => {
-    this.setState({ userTrackingMode });
-    console.log('onChangeUserTrackingMode', userTrackingMode);
-  }
-
-  componentWillMount() {
-    this._offlineProgressSubscription = Mapbox.addOfflinePackProgressListener(progress => {
-      console.log('offline pack progress', progress);
-    });
-    this._offlineMaxTilesSubscription = Mapbox.addOfflineMaxAllowedTilesListener(tiles => {
-      console.log('offline max allowed tiles', tiles);
-    });
-    this._offlineErrorSubscription = Mapbox.addOfflineErrorListener(error => {
-      console.log('offline error', error);
-    });
-  }
 
   componentDidMount() {
    const mainComponent = this;
@@ -269,7 +252,6 @@ class MapExample extends Component {
          }
        }]
      });
-     console.log('append incident to map', event);
    });
 
     //fetch street colors
@@ -299,18 +281,12 @@ class MapExample extends Component {
       });
   }
 
-  componentWillUnmount() {
-    this._offlineProgressSubscription.remove();
-    this._offlineMaxTilesSubscription.remove();
-    this._offlineErrorSubscription.remove();
-  }
-
   showNav() {
     if (this.state.view === 1) {
       return (
         <View>
         <TextInput
-          onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
+          onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text)}
           style={styles.textInput}
           placeholder="Enter current location"
           placeholderTextColor="black"
@@ -325,6 +301,7 @@ class MapExample extends Component {
       )
     }
   }
+
   renderCheckList() {
     if (this.state.view === 3) {
       const options = [
@@ -341,7 +318,6 @@ class MapExample extends Component {
         });
       }
       function renderOption( option, selected, onSelect, index) {
-
         const textStyle = {
           paddingTop: 10,
           paddingBottom: 10,
