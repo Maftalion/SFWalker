@@ -16,20 +16,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  [AppHub setApplicationID:@"fV8Ral7g7wZvbz6gdE7x"];
+  
   NSURL *jsCodeLocation;
 
   jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index.ios" fallbackResource:nil];
-  /**
-   * OPTION 3 - AppHub
-   *
-   * Load cached code and images from AppHub.
-   *
-   */
-  
-  AHBuild *build = [[AppHub buildManager] currentBuild];
-  jsCodeLocation = [build.bundle URLForResource:@"main"
-                                  withExtension:@"jsbundle"];
+
   RCTRootView *rootView = [[RCTRootView alloc] initWithBundleURL:jsCodeLocation
                                                       moduleName:@"whimsicleBugle"
                                                initialProperties:nil
