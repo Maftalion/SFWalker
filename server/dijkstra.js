@@ -106,20 +106,30 @@ module.exports = function(start, dest, attr) {
       // console.log(JSON.stringify(jsonPath));
 
       var path = [];
+      var pathDist = 0;
+      var pathDanger = 0;
       for (var x = 0; x < s.length - 1; x++) {
         path.push(JSON.parse(s[x]));
         var intermediatePath = undefined;
+        var intermediateDist = 0;
+        var intermediateDanger = 0;
         console.log('x', hash[s[x]].edges);
+        // Traverse all edges from node, in case two different roads connect two nodes.
         for (var y = 0; y < hash[s[x]].edges.length; y++) {
           console.log('y', hash[s[x]].edges[y].node, s[x + 1]);
           if (hash[s[x]].edges[y].node === s[x + 1] && (!intermediatePath || hash[s[x]].edges[y][attr] < edgeWeight)) {
             console.log('writing');
             intermediatePath = hash[s[x]].edges[y].path;
             edgeWeight = hash[s[x]].edges[y][attr];
-            console.log('inter', intermediatePath, edgeWeight);
+            intermediateDist = hash[s[x]].edges[y].distance;
+            intermediateDanger = hash[s[x]].edges[y].walkDangerScore;
+            console.log('inter', intermediatePath, edgeWeight, intermediateDist, intermediateDanger);
           }
         }
         path = path.concat(intermediatePath);
+        pathDist += intermediateDist;
+        pathDanger += intermediateDanger;
+
       }
       path.push(JSON.parse(s[s.length - 1]));
 
@@ -129,7 +139,7 @@ module.exports = function(start, dest, attr) {
       for (var key in hash) {
         hash[key].prev = undefined;
       }
-      return path;
+      return { path: path, dist: pathDist, danger: pathDanger };
     }
 
     for (var i = 0; i < hash[cur.key].edges.length; i++) {
