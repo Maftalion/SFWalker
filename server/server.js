@@ -68,8 +68,12 @@ app.post('/routes', function(req, res) {
   res.type('application/json');
   res.status(200);
   res.send(JSON.stringify({
-    short: short,
-    safe: safe
+    short: short.path,
+    shortDist: short.dist,
+    shortDanger: short.danger,
+    safe: safe.path,
+    safeDist: safe.dist,
+    safeDanger: safe.danger
   }));
 })
 
