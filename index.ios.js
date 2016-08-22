@@ -18,7 +18,7 @@ import io from 'socket.io-client/socket.io';
 import Buttons from './src/components/buttons';
 import { RadioButtons } from 'react-native-radio-buttons';
 import moment from 'moment';
-var socket = io('http://localhost:3000', { transports: ['websocket'] } );
+var socket = io('https://sfwalker.herokuapp.com/', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
@@ -132,7 +132,7 @@ class MapExample extends Component {
 
   showRoutes = () => {
     if (this.state.start && this.state.dest) {
-      fetch('http://localhost:3000/routes', {
+      fetch('https://sfwalker.herokuapp.com/routes', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -237,11 +237,11 @@ class MapExample extends Component {
    const mainComponent = this;
 
    socket.on('appendReport', function(event) {
-    const time = moment().format('MMMM Do YYYY, h:mm:ss a');
+    console.log('front')
     mainComponent.setState({
        annotations: [...mainComponent.state.annotations, {
          title: event.category,
-         subtitle: time,
+         subtitle: event.datetime,
          type: 'point',
          id: `report:${event.id}`,
          coordinates: [event.latitude, event.longitude],
@@ -255,26 +255,23 @@ class MapExample extends Component {
    });
 
     //fetch street colors
-    fetch('http://localhost:3000/allstreets')
+    fetch('https://sfwalker.herokuapp.com/allstreets')
       .then((response) => response.json())
       .then((responseJson) => {
 
         mainComponent.setState({ annotations: responseJson });
 
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
-      //fetch last 24-hours of reported incidents
-      fetch('http://localhost:3000/incidents')
-      .then((response) => response.json())
-      .then((responseJson) => {
-
-        mainComponent.setState({
-           annotations: mainComponent.state.annotations.concat(responseJson)
-         });
-
+        //fetch last 24-hours of reported incidents
+        fetch('https://sfwalker.herokuapp.com/incidents')
+        .then((response) => response.json())
+        .then((responseJson) => {
+          mainComponent.setState({
+             annotations: mainComponent.state.annotations.concat(responseJson)
+           });
+        })
+        .catch((error) => {
+          console.error(error);
+        });
       })
       .catch((error) => {
         console.error(error);
