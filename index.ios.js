@@ -18,7 +18,6 @@ import convertGPS from './src/api';
 import io from 'socket.io-client/socket.io'
 import Buttons from './src/components/buttons'
 import { RadioButtons } from 'react-native-radio-buttons'
-//heroku url: https://sfwalker.herokuapp.com
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
@@ -287,7 +286,7 @@ class MapExample extends Component {
       mainComponent.setState({ center: {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
-        } 
+        }
       });
     });
 
@@ -505,7 +504,7 @@ class MapExample extends Component {
   if (this.state.start && this.state.dest){
     fetch('https://api.uber.com/v1/estimates/price', {
       headers: {
-        Authorization: 'nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt'
+        Authorization: 'Token nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt'
       },
       data: {
         start_latitude: this.state.start[0],
@@ -839,12 +838,12 @@ const styles = StyleSheet.create({
   textInput: {
     height: 30,
     textAlign: 'center',
-    borderColor: 'grey',
+    borderColor: 'lightgrey',
     borderWidth: 1,
     borderRadius: 15,
     marginHorizontal: 8,
     marginTop: 2,
-    backgroundColor: '#d3d3d3',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     opacity: .7
   },
   container: {
