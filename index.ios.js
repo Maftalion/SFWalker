@@ -21,6 +21,7 @@ import { RadioButtons } from 'react-native-radio-buttons'
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
+process.env.NODE_ENV = 'development';
 class MapExample extends Component {
 
   state = {
