@@ -17,7 +17,7 @@ export default class Buttons extends Component {
         <Button>
         <Image style={[styles.button, {opacity: .5}]} source={require('./../assets/bike.gif')}/>
         </Button>
-        <Button>
+        <Button onPress={() => this.props.handleUber()}>
         <Image style={[styles.button, {opacity: .5}]} source={require('./../assets/taxi.gif')}/>
         </Button>
       </View>

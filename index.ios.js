@@ -426,9 +426,38 @@ class MapExample extends Component {
     });
   }
 
+  handleUber = () => {
+  if (this.state.start && this.state.dest){
+    fetch('https://api.uber.com/v1/estimates/price', {
+      headers: {
+        Authorization: 'nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt'
+      },
+      data: {
+        start_latitude: this.state.start[0],
+        start_longitude: this.state.start[1],
+        end_latitude: this.state.dest[0],
+        end_longitude: this.state.dest[1]
+      }
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      console.log(responseJson);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  }
+}
+
   showButtons() {
     if (this.state.view === 1) {
-      return <Buttons />
+      return (
+        <Buttons
+          start={this.state.start}
+          dest={this.state.dest}
+          handleUber={this.handleUber}
+        />
+      )
     }
   }
 
