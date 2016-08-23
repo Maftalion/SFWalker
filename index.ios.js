@@ -26,6 +26,10 @@ Mapbox.setAccessToken(accessToken);
 class MapExample extends Component {
 
   state = {
+    uber: {
+      time: '',
+      price: ''
+    },
     center: {
       latitude: 37.7836925,
       longitude: -122.4111781
@@ -501,21 +505,17 @@ class MapExample extends Component {
   }
 
   handleUber = () => {
+    var comp = this;
   if (this.state.start && this.state.dest){
-    fetch('https://api.uber.com/v1/estimates/price', {
-      headers: {
-        Authorization: 'Token nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt'
-      },
-      data: {
-        start_latitude: this.state.start[0],
-        start_longitude: this.state.start[1],
-        end_latitude: this.state.dest[0],
-        end_longitude: this.state.dest[1]
-      }
-    })
+    fetch(`https://api.uber.com/v1/estimates/price?start_latitude=${this.state.start[0]}&start_longitude=${this.state.start[1]}&end_latitude=${this.state.dest[0]}&end_longitude=${this.state.dest[1]}&server_token=nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt`)
     .then((response) => response.json())
-    .then((responseJson) => {
-      console.log(responseJson);
+    .then((uber) => {
+      comp.setState({
+        uber: {
+          time: uber.prices[1].duration /60,
+          price: uber.prices[1].estimate
+        }
+      })
     })
     .catch((error) => {
       console.error(error);
@@ -543,17 +543,13 @@ class MapExample extends Component {
     }, () => console.log(annotations.length));
   }
 
-  showButtons() {
-    if (this.state.view === 1) {
-      return (
-        <Buttons
-          start={this.state.start}
-          dest={this.state.dest}
-          handleUber={this.handleUber}
-        />
-      )
-    }
-  }
+  // showButtons() {
+  //   if (this.state.view === 1) {
+  //     return (
+  //       <Buttons/>
+  //     )
+  //   }
+  // }
 
   showReportUI() {
     if (this.state.view === 2) {
@@ -590,10 +586,6 @@ class MapExample extends Component {
   renderRoutesList() {
     if (this.state.view === 4) {
       function setSelectedOption(selectedRoute) {
-        // this.setState({
-        //   selectedRoute: selectedRoute
-        // });
-
         var selected = JSON.parse(selectedRoute)[0];
 
         var annotations = this.state.annotations.slice();
@@ -707,6 +699,11 @@ class MapExample extends Component {
             renderContainer={ renderContainer }
             />
             </View>
+            <TouchableWithoutFeedback>
+              <View>
+                <Text>{'\t Alt: Uber' + '  \t'} Estimated Time: {this.state.uber.time + ' \t'} Price: {this.state.uber.price}</Text>
+              </View>
+            </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={this.returnToMap}>
               <View style={{backgroundColor: 'rgba(238,238,238,0.8)'}}>
                 <Text style={{
@@ -721,6 +718,7 @@ class MapExample extends Component {
         </View>
       )
     }
+    this.handleUber();
   }
 
   render() {
@@ -755,7 +753,6 @@ class MapExample extends Component {
                   </ScrollView>
                 </View>
               </View>
-              {this.showButtons()}
               <View style={{marginTop: 22}}>
                 <Modal
                   animationType={'fade'}
@@ -827,7 +824,7 @@ const styles = StyleSheet.create({
   reportButton: {
     position: 'absolute',
     bottom: 0,
-    right: 0
+    left: 160
   },
   textContainer: {
     marginHorizontal: 5
