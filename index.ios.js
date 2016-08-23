@@ -501,11 +501,34 @@ class MapExample extends Component {
     }
   }
 
+  handleUber = () => {
+  if (this.state.start && this.state.dest){
+    fetch('https://api.uber.com/v1/estimates/price', {
+      headers: {
+        Authorization: 'nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt'
+      },
+      data: {
+        start_latitude: this.state.start[0],
+        start_longitude: this.state.start[1],
+        end_latitude: this.state.dest[0],
+        end_longitude: this.state.dest[1]
+      }
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      console.log(responseJson);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  }
+}
+
   submitIncident() {
     // this.setState({view: 1})
     console.log('incident sent to backend')
     socket.emit('report', {
-      category: this.state.checkListOption, 
+      category: this.state.checkListOption,
       coords: [this.state.center.latitude, this.state.center.longitude]
     });
     var annotations = this.state.annotations.slice();
@@ -523,7 +546,13 @@ class MapExample extends Component {
 
   showButtons() {
     if (this.state.view === 1) {
-      return <Buttons />
+      return (
+        <Buttons
+          start={this.state.start}
+          dest={this.state.dest}
+          handleUber={this.handleUber}
+        />
+      )
     }
   }
 
@@ -566,7 +595,6 @@ class MapExample extends Component {
         //   selectedRoute: selectedRoute
         // });
 
-        console.log('selectedRoute', typeof selectedRoute);
         var selected = JSON.parse(selectedRoute)[0];
 
         var annotations = this.state.annotations.slice();
@@ -581,8 +609,6 @@ class MapExample extends Component {
         if (index) {
           var old = annotations.splice(index - 1, 2);
         }
-        console.log('old', old);
-
         // Have selected be drawn on top of unselected
         if ((selected === 'Short' && old[1].id === 'safeRoute') || (selected === 'Safe' && old[1].id === 'shortRoute')) {
           [old[0], old[1]] = [old[1], old[0]];
@@ -601,8 +627,6 @@ class MapExample extends Component {
       }
 
       function renderOption(option, selected, onSelect, index) {
-        console.log('option', option);
-        console.log('selected', selected, 'onSelect', onSelect, 'index', index);
         var route = JSON.parse(option);
 
         const textStyle = {
@@ -628,17 +652,6 @@ class MapExample extends Component {
         } else {
           style = baseStyle;
         }
-
-        // if (selected) {
-        //   checkMark = <Text style={{
-        //     flex: 0.1,
-        //     color: '#007AFF',
-        //     fontWeight: 'bold',
-        //     paddingTop: 8,
-        //     fontSize: 20,
-        //     alignSelf: 'center',
-        //   }}>✓</Text>
-        // }
 
         return (
           <TouchableWithoutFeedback onPress={onSelect} key={index}>
@@ -672,9 +685,7 @@ class MapExample extends Component {
         <View style={{flex: 1}}>
           <View>
             <View style={{
-              // backgroundColor: '#eeeeee',
               backgroundColor: 'rgba(238,238,238,0.8)',
-              // backgroundColor: 'rgba(255,0,0,0.4)',
               paddingTop: 0,
               paddingBottom: 0,
             }}>
