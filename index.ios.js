@@ -33,7 +33,7 @@ class MapExample extends Component {
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
     annotations: [],
-    view: 1,
+    view: 1
   };
 
   handleStart = (input) => {
@@ -54,6 +54,7 @@ class MapExample extends Component {
 
         this.setState({
           start: [data.lat, data.lon],
+          startAddress: input,
           annotations: annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
@@ -92,6 +93,7 @@ class MapExample extends Component {
 
         this.setState({
           dest: [data.lat, data.lon],
+          destAddress: input,
           annotations: annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
@@ -145,6 +147,7 @@ class MapExample extends Component {
       })
       .then((response) => response.json())
       .then((responseJson) => {
+        console.log('responseJSON', responseJson);
         responseJson.short.forEach((el) => {
           [el[0], el[1]] = [el[1], el[0]];
         });
@@ -155,18 +158,24 @@ class MapExample extends Component {
         var annotations = this.state.annotations.slice();
         var index = undefined;
         annotations.forEach((feature, i) => {
-          if (feature.id === 'shortRoute') {
+          if (feature.id === 'shortRoute' || feature.id === 'safeRoute') {
             index = i;
           }
         });
 
         if (index) {
-          annotations.splice(index, 2);
+          annotations.splice(index - 1, 2);
         }
 
         this.setState({
+          view: 4,
+          selectedRoute: undefined,
           short: responseJson.short,
+          shortDist: responseJson.shortDist,
+          shortDanger: responseJson.shortDanger,
           safe: responseJson.safe,
+          safeDist: responseJson.safeDist,
+          safeDanger: responseJson.safeDanger,
           annotations: annotations.concat([{
             coordinates: responseJson.short,
             type: 'polyline',
@@ -207,6 +216,12 @@ class MapExample extends Component {
     }
   }
 
+  returnToMap = () => {
+    console.log('returning');
+    this.setState({
+      view: 1
+    })
+  }
 
   onRegionDidChange = (location) => {
     this.setState({
@@ -313,12 +328,14 @@ class MapExample extends Component {
           style={styles.textInput}
           placeholder="Enter current location"
           placeholderTextColor="black"
+          defaultValue={this.state.startAddress ? this.state.startAddress : ''}
           />
         <TextInput
           onSubmitEditing={(event) => this.handleDest(event.nativeEvent.text)}
           style={styles.textInput}
           placeholder="Enter Destination"
           placeholderTextColor="black"
+          defaultValue={this.state.destAddress ? this.state.destAddress : ''}
           />
         </View>
       )
@@ -436,7 +453,8 @@ class MapExample extends Component {
             Submit
           </Button>
         </View>
-        </View>)
+        </View>
+      )
     }
   }
 
@@ -487,6 +505,160 @@ class MapExample extends Component {
     }
   }
 
+  renderRoutesList() {
+    if (this.state.view === 4) {
+      function setSelectedOption(selectedRoute) {
+        // this.setState({
+        //   selectedRoute: selectedRoute
+        // });
+
+        console.log('selectedRoute', typeof selectedRoute);
+        var selected = JSON.parse(selectedRoute)[0];
+
+        var annotations = this.state.annotations.slice();
+        var indexShort = undefined;
+        var index
+        annotations.forEach((feature, i) => {
+          if (feature.id === 'shortRoute' || feature.id === 'safeRoute') {
+            index = i;
+          }
+        });
+
+        if (index) {
+          var old = annotations.splice(index - 1, 2);
+        }
+        console.log('old', old);
+
+        // Have selected be drawn on top of unselected
+        if ((selected === 'Short' && old[1].id === 'safeRoute') || (selected === 'Safe' && old[1].id === 'shortRoute')) {
+          [old[0], old[1]] = [old[1], old[0]];
+        }
+
+        old[0].strokeWidth = 5;
+        old[0].strokeAlpha = 0.7;
+        old[1].strokeWidth = 8;
+        old[1].strokeAlpha = 1;
+
+        this.setState({
+          view: 4,
+          selectedRoute: selectedRoute,
+          annotations: annotations.concat(old)
+        });
+      }
+
+      function renderOption(option, selected, onSelect, index) {
+        console.log('option', option);
+        console.log('selected', selected, 'onSelect', onSelect, 'index', index);
+        var route = JSON.parse(option);
+
+        const textStyle = {
+          paddingTop: 10,
+          paddingBottom: 10,
+          color: route[0] === 'Safe' ? '#5DADE2' : '#28B463',
+          flex: 0.2,
+          fontSize: 14,
+          fontWeight: selected ? 'bold' : 'normal'
+        };
+        const baseStyle = {
+          flexDirection: 'row',
+          backgroundColor: 'white'
+        };
+        var style;
+        // var checkMark;
+
+        if (index > 0) {
+          style = [baseStyle, {
+            borderTopColor: '#eeeeee',
+            borderTopWidth: 1,
+          }];
+        } else {
+          style = baseStyle;
+        }
+
+        // if (selected) {
+        //   checkMark = <Text style={{
+        //     flex: 0.1,
+        //     color: '#007AFF',
+        //     fontWeight: 'bold',
+        //     paddingTop: 8,
+        //     fontSize: 20,
+        //     alignSelf: 'center',
+        //   }}>✓</Text>
+        // }
+
+        return (
+          <TouchableWithoutFeedback onPress={onSelect} key={index}>
+            <View style={style}>
+              <Text style={textStyle}>{route[0] + '  \t\t'} Distance: {(route[2] / 1000).toFixed(1) + ' km    \t'} Danger: {route[3].toFixed(2)}</Text>
+            </View>
+          </TouchableWithoutFeedback>
+        )
+      }
+
+      function renderContainer(options){
+        return (
+          <View style={{
+            flex: 1,
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            alignItems: 'stretch',
+            backgroundColor: 'white',
+            paddingLeft: 20,
+            borderTopWidth: 1,
+            borderTopColor: '#cccccc',
+            borderBottomWidth: 1,
+            borderBottomColor: '#cccccc'
+          }}>
+          {options}
+          </View>
+        )
+      }
+
+      return (
+        <View style={{flex: 1}}>
+          <View>
+            <View style={{
+              // backgroundColor: '#eeeeee',
+              backgroundColor: 'rgba(238,238,238,0.8)',
+              // backgroundColor: 'rgba(255,0,0,0.4)',
+              paddingTop: 0,
+              paddingBottom: 0,
+            }}>
+            <Text style={{
+              color: '#555555',
+              paddingBottom: 5,
+              paddingTop: 5,
+              fontSize: 12,
+              textAlign: 'center',
+              fontWeight: 'bold'
+            }}>Select Route</Text>
+            <RadioButtons
+            options={ [
+              JSON.stringify(['Safe', this.state.safe, this.state.safeDist, this.state.safeDanger]),
+              JSON.stringify(['Short', this.state.short, this.state.shortDist, this.state.shortDanger])
+            ] }
+            onSelection={ setSelectedOption.bind(this) }
+            selectedOption={ this.state.selectedRoute }
+            renderOption={ renderOption }
+            renderContainer={ renderContainer }
+            />
+            </View>
+            <TouchableWithoutFeedback onPress={this.returnToMap}>
+              <View style={{backgroundColor: 'rgba(238,238,238,0.8)'}}>
+                <Text style={{
+                  color: '#b10026',
+                  textAlign: 'center',
+                  paddingTop: 3,
+                  paddingBottom: 3
+                }}>Close</Text>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </View>
+      )
+    }
+  }
+
   render() {
     return (
         <View style={styles.container}>
@@ -520,6 +692,11 @@ class MapExample extends Component {
                 </View>
               </View>
               {this.showButtons()}
+          </View>
+          <View>
+            <ScrollView>
+              {this.renderRoutesList()}
+            </ScrollView>
           </View>
           <View style={styles.reportButton}>
             {this.showReportButton()}
