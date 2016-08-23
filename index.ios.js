@@ -14,11 +14,11 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
-import io from 'socket.io-client/socket.io';
-import Buttons from './src/components/buttons';
-import { RadioButtons } from 'react-native-radio-buttons';
-import moment from 'moment';
-var socket = io('https://sfwalker.herokuapp.com/', { transports: ['websocket'] } );
+import io from 'socket.io-client/socket.io'
+import Buttons from './src/components/buttons'
+import { RadioButtons } from 'react-native-radio-buttons'
+
+var socket = io('http://localhost:3000', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
@@ -54,7 +54,7 @@ class MapExample extends Component {
 
         this.setState({
           start: [data.lat, data.lon],
-          annotations: [ ...annotations, {
+          annotations: annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -64,7 +64,7 @@ class MapExample extends Component {
               width: 25
             },
             id: 'entered location'
-          }]
+          }])
         }, () => {
           if (!this.state.dest) {
             this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
@@ -92,7 +92,7 @@ class MapExample extends Component {
 
         this.setState({
           dest: [data.lat, data.lon],
-          annotations: [...annotations, {
+          annotations: annotations.concat([{
             coordinates: [data.lat, data.lon],
             title: data.name,
             type: 'point',
@@ -102,7 +102,7 @@ class MapExample extends Component {
               width: 25
             },
             id: 'entered destination'
-          }]
+          }])
         }, () => {
           if (!this.state.start) {
             this._map.setCenterCoordinateZoomLevel(data.lat, data.lon, 15, true);
@@ -117,7 +117,7 @@ class MapExample extends Component {
     let center = this.state.center;
     this.setState({
       view: 2,
-      annotations: [...annotations, {
+      annotations: annotations.concat([{
         type: 'point',
         id: 'report',
         coordinates: [center.latitude, center.longitude],
@@ -126,13 +126,13 @@ class MapExample extends Component {
           height: 25,
           width: 25
         }
-      }]
+      }])
     })
   }
 
   showRoutes = () => {
     if (this.state.start && this.state.dest) {
-      fetch('https://sfwalker.herokuapp.com/routes', {
+      fetch('http://localhost:3000/routes', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -167,7 +167,7 @@ class MapExample extends Component {
         this.setState({
           short: responseJson.short,
           safe: responseJson.safe,
-          annotations: [...annotations, {
+          annotations: annotations.concat([{
             coordinates: responseJson.short,
             type: 'polyline',
             strokeColor: '#28B463',
@@ -181,7 +181,7 @@ class MapExample extends Component {
             strokeWidth: 5,
             strokeAlpha: 0.7,
             id: 'safeRoute'
-          }]
+          }])
         }, () => {
           var nodes = this.state.short.concat(this.state.safe, [this.state.start, this.state.dest]);
           var latSW = nodes[0][0]; var latNE = nodes[0][0]; var lonSW = nodes[0][1]; var lonNE = nodes[0][1];
@@ -218,7 +218,7 @@ class MapExample extends Component {
      });
     if (this.state.view === 2) {
       this.setState({
-        annotations: [...this.state.annotations, {
+        annotations: this.state.annotations.concat([{
           type: 'point',
           id: 'report',
           coordinates: [location.latitude, location.longitude],
@@ -227,21 +227,37 @@ class MapExample extends Component {
             height: 25,
             width: 25
           }
-        }]
-      })
+        }])
+      });
     }
+    console.log('onRegionDidChange', location);
   }
 
+  onChangeUserTrackingMode = (userTrackingMode) => {
+    this.setState({ userTrackingMode });
+    console.log('onChangeUserTrackingMode', userTrackingMode);
+  }
+
+  componentWillMount() {
+    this._offlineProgressSubscription = Mapbox.addOfflinePackProgressListener(progress => {
+      console.log('offline pack progress', progress);
+    });
+    this._offlineMaxTilesSubscription = Mapbox.addOfflineMaxAllowedTilesListener(tiles => {
+      console.log('offline max allowed tiles', tiles);
+    });
+    this._offlineErrorSubscription = Mapbox.addOfflineErrorListener(error => {
+      console.log('offline error', error);
+    });
+  }
 
   componentDidMount() {
    const mainComponent = this;
 
    socket.on('appendReport', function(event) {
-    console.log('front')
+
+    console.log(event.latitude, event.longitude);
     mainComponent.setState({
        annotations: [...mainComponent.state.annotations, {
-         title: event.category,
-         subtitle: event.datetime,
          type: 'point',
          id: `report:${event.id}`,
          coordinates: [event.latitude, event.longitude],
@@ -252,30 +268,40 @@ class MapExample extends Component {
          }
        }]
      });
+     console.log('append incident to map', event);
    });
 
     //fetch street colors
-    fetch('https://sfwalker.herokuapp.com/allstreets')
+    fetch('http://localhost:3000/allstreets')
       .then((response) => response.json())
       .then((responseJson) => {
 
         mainComponent.setState({ annotations: responseJson });
 
-        //fetch last 24-hours of reported incidents
-        fetch('https://sfwalker.herokuapp.com/incidents')
-        .then((response) => response.json())
-        .then((responseJson) => {
-          mainComponent.setState({
-             annotations: mainComponent.state.annotations.concat(responseJson)
-           });
-        })
-        .catch((error) => {
-          console.error(error);
-        });
       })
       .catch((error) => {
         console.error(error);
       });
+
+      //fetch last 24-hours of reported incidents
+      fetch('http://localhost:3000/incidents')
+      .then((response) => response.json())
+      .then((responseJson) => {
+
+        mainComponent.setState({
+           annotations: mainComponent.state.annotations.concat(responseJson)
+         });
+
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+  componentWillUnmount() {
+    this._offlineProgressSubscription.remove();
+    this._offlineMaxTilesSubscription.remove();
+    this._offlineErrorSubscription.remove();
   }
 
   showNav() {
@@ -283,7 +309,7 @@ class MapExample extends Component {
       return (
         <View>
         <TextInput
-          onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text)}
+          onSubmitEditing={(event) => this.handleStart(event.nativeEvent.text) }
           style={styles.textInput}
           placeholder="Enter current location"
           placeholderTextColor="black"
@@ -298,7 +324,6 @@ class MapExample extends Component {
       )
     }
   }
-
   renderCheckList() {
     if (this.state.view === 3) {
       const options = [
@@ -315,6 +340,7 @@ class MapExample extends Component {
         });
       }
       function renderOption( option, selected, onSelect, index) {
+
         const textStyle = {
           paddingTop: 10,
           paddingBottom: 10,
@@ -418,7 +444,7 @@ class MapExample extends Component {
     this.setState({view: 1})
     console.log('incident sent to backend')
     socket.emit('report', {
-      category: this.state.checkListOption,
+      category: this.state.checkListOption, 
       coords: [this.state.center.latitude, this.state.center.longitude]
     });
   }
@@ -466,7 +492,6 @@ class MapExample extends Component {
         <View style={styles.container}>
           <MapView
             ref={map => { this._map = map }}
-            annotationsAreImmutable	= {true}
             style={styles.map}
             initialCenterCoordinate={this.state.center}
             initialZoomLevel={this.state.zoom}
