@@ -557,17 +557,13 @@ class MapExample extends Component {
     }, () => console.log(annotations.length));
   }
 
-  showButtons() {
-    if (this.state.view === 1) {
-      return (
-        <Buttons
-          start={this.state.start}
-          dest={this.state.dest}
-          handleUber={this.handleUber}
-        />
-      )
-    }
-  }
+  // showButtons() {
+  //   if (this.state.view === 1) {
+  //     return (
+  //       <Buttons/>
+  //     )
+  //   }
+  // }
 
   showReportUI() {
     if (this.state.view === 2) {
