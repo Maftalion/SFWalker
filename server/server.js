@@ -5,6 +5,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var Incident = require('./models/model');
 var _ = require('underscore');
+var Promise = require('bluebird');
 
 var generatePathColors = require('./pathColors');
 var getRoutes = require('./dijkstra.js');
@@ -56,26 +57,27 @@ app.get('/allstreets', function(req, res) {
     res.send(result);
   })
   .catch(function(e) {
-      console.log(e);
-      res.sendStatus(500);
+    console.log(e);
+    res.sendStatus(500);
   });
 });
 
 app.post('/routes', function(req, res) {
-  var short = getRoutes(req.body.start, req.body.dest, 'distance');
-  var safe = getRoutes(req.body.start, req.body.dest, 'crimeDistance');
-
-  res.type('application/json');
-  res.status(200);
-  res.send(JSON.stringify({
-    short: short.path,
-    shortDist: short.dist,
-    shortDanger: short.danger,
-    safe: safe.path,
-    safeDist: safe.dist,
-    safeDanger: safe.danger
-  }));
-})
+  Promise.all([getRoutes(req.body.start, req.body.dest, 'distance'), getRoutes(req.body.start, req.body.dest, 'crimeDistance')])
+  .then(function(values) {
+    console.log(values);
+    res.type('application/json');
+    res.status(200);
+    res.send(JSON.stringify({
+      short: values[0].path,
+      shortDist: values[0].dist,
+      shortDanger: values[0].danger,
+      safe: values[1].path,
+      safeDist: values[1].dist,
+      safeDanger: values[1].danger
+    }));
+  });
+});
 
 app.get('/incidents', function(req, res) {
   console.log('/incident get route');
