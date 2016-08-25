@@ -348,23 +348,9 @@ class MapExample extends Component {
         fetch('https://sfwalker.herokuapp.com/incidents')
         .then((response) => response.json())
         .then((responseJson) => {
-          console.log('incidents', responseJson);
           mainComponent.setState({
             annotations: mainComponent.state.annotations.concat(responseJson)
           });
-        });
-
-        fetch('https://sfwalker.herokuapp.com/incidents')
-        .then((response) => response.json())
-        .then((responseJson) => {
-
-          mainComponent.setState({
-             annotations: mainComponent.state.annotations.concat(responseJson)
-           });
-
-        })
-        .catch((error) => {
-          console.error(error);
         });
       })
       .catch((error) => {
