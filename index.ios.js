@@ -299,7 +299,9 @@ class MapExample extends Component {
         annotations: [...mainComponent.state.annotations, {
           type: 'point',
           id: `report:${event.id}`,
-          coordinates: [event.latitude, event.longitude]
+          coordinates: [event.latitude, event.longitude],
+          title: event.category,
+          subtitle: event.time
         }]
       }, () => {
         if (mainComponent.state.safe) {
@@ -350,13 +352,12 @@ class MapExample extends Component {
           mainComponent.setState({
             annotations: mainComponent.state.annotations.concat(responseJson)
           });
-        });
+        })
+        .catch((error) => {
+          console.error(error);
+        })
       })
-      .catch((error) => {
-        console.error(error);
-      });
-    });
-
+    })
   }
 
   componentWillUnmount() {
