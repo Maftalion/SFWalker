@@ -321,7 +321,6 @@ class MapExample extends Component {
             newSafe.forEach((el) => {
               [el[0], el[1]] = [el[1], el[0]];
             });
-
             var deepEquals = mainComponent.state.safe.length === newSafe.length;
             if (deepEquals) {
               for (var i = 0; i < newSafe.length; i++) {
