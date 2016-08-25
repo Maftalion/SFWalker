@@ -21,7 +21,6 @@ import { RadioButtons } from 'react-native-radio-buttons'
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
-process.env.NODE_ENV = 'development';
 class MapExample extends Component {
 
   state = {
@@ -353,6 +352,22 @@ class MapExample extends Component {
             annotations: mainComponent.state.annotations.concat(responseJson)
           });
         });
+
+        fetch('https://sfwalker.herokuapp.com/incidents')
+        .then((response) => response.json())
+        .then((responseJson) => {
+
+          mainComponent.setState({
+             annotations: mainComponent.state.annotations.concat(responseJson)
+           });
+
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+      })
+      .catch((error) => {
+        console.error(error);
       });
     });
 
