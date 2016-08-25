@@ -10,7 +10,8 @@ import {
   Image,
   ScrollView,
   TextInput,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Modal
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
@@ -18,7 +19,7 @@ import io from 'socket.io-client/socket.io'
 import Buttons from './src/components/buttons'
 import { RadioButtons } from 'react-native-radio-buttons'
 
-var socket = io('http://localhost:3000', { transports: ['websocket'] } );
+var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
@@ -33,8 +34,13 @@ class MapExample extends Component {
     zoom: 14,
     userTrackingMode: Mapbox.userTrackingMode.follow,
     annotations: [],
-    view: 1
+    view: 1,
+    reportModalVisible: false
   };
+
+  setReportModalVisible(visible) {
+    this.setState({reportModalVisible: visible});
+  }
 
   handleStart = (input) => {
     convertGPS(input)
@@ -121,7 +127,7 @@ class MapExample extends Component {
       view: 2,
       annotations: annotations.concat([{
         type: 'point',
-        id: 'report',
+        id: 'newReportPointer',
         coordinates: [center.latitude, center.longitude],
         annotationImage: {
           source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
@@ -134,7 +140,7 @@ class MapExample extends Component {
 
   showRoutes = () => {
     if (this.state.start && this.state.dest) {
-      fetch('http://localhost:3000/routes', {
+      fetch('https://sfwalker.herokuapp.com/routes', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -216,6 +222,25 @@ class MapExample extends Component {
     }
   }
 
+  calculateFromCurrentLocation = () => {
+    this.setReportModalVisible(false);
+    navigator.geolocation.getCurrentPosition((position) => {
+      console.log(position, typeof position);
+      fetch('https://maps.googleapis.com/maps/api/geocode/json?latlng=' + position.coords.latitude + ',' + position.coords.longitude + '&key=AIzaSyB_qAJhc4T9bjShAitFLJlm7_8RvO5qooM')
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log(responseJson);
+        this.setState({
+          startAddress: responseJson.results[0].formatted_address,
+          start: [position.coords.latitude, position.coords.longitude]
+        }, () => {
+          console.log('start', this.state.start);
+          this.handleStart(this.state.startAddress);
+        });
+      });
+    });
+  }
+
   returnToMap = () => {
     console.log('returning');
     this.setState({
@@ -235,7 +260,7 @@ class MapExample extends Component {
       this.setState({
         annotations: this.state.annotations.concat([{
           type: 'point',
-          id: 'report',
+          id: 'newReportPointer',
           coordinates: [location.latitude, location.longitude],
           annotationImage: {
             source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
@@ -243,7 +268,7 @@ class MapExample extends Component {
             width: 25
           }
         }])
-      });
+      }, () => console.log(this.state.annotations.length));
     }
     console.log('onRegionDidChange', location);
   }
@@ -267,36 +292,70 @@ class MapExample extends Component {
 
   componentDidMount() {
     const mainComponent = this;
-    socket.on('appendReport', function(event) {
+    socket.on('appendReport', function(event) {
       console.log(event.latitude, event.longitude);
-      mainComponent.setState({
-        annotations: [...mainComponent.state.annotations, {
-          type: 'point',
-          id: `report:${event.id}`,
-          coordinates: [event.latitude, event.longitude],
-          annotationImage: {
-            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-            height: 25,
-            width: 25
-          }
-        }]
-       });
-     console.log('append incident to map', event);
-   });
+      mainComponent.setState({
+        annotations: [...mainComponent.state.annotations, {
+          type: 'point',
+          id: `report:${event.id}`,
+          coordinates: [event.latitude, event.longitude],
+          annotationImage: {
+            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+            height: 25,
+            width: 25
+          }
+        }]
+      }, () => {
+        if (mainComponent.state.safe) {
+          fetch('https://sfwalker.herokuapp.com/routes', {
+            method: 'post',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              start: [mainComponent.state.start[1], mainComponent.state.start[0]],
+              dest: [mainComponent.state.dest[1], mainComponent.state.dest[0]]
+            })
+          })
+          .then((response) => response.json())
+          .then((responseJson) => {
+            console.log('newPath', responseJson);
+            var newSafe = responseJson.safe;
+            newSafe.forEach((el) => {
+              [el[0], el[1]] = [el[1], el[0]];
+            });
+
+            var deepEquals = mainComponent.state.safe.length === newSafe.length;
+            if (deepEquals) {
+              for (var i = 0; i < newSafe.length; i++) {
+                if (newSafe[i][0] !== mainComponent.state.safe[i][0] || newSafe[i][1] !== mainComponent.state.safe[i][1]) {
+                  deepEquals = false;
+                }
+              }
+            }
+            if (!deepEquals) {
+              mainComponent.setReportModalVisible(true);
+            }
+          });
+        }
+      });
+      console.log('append incident to map', event);
+    });
 
     //fetch street colors
-    fetch('http://localhost:3000/allstreets')
+    fetch('https://sfwalker.herokuapp.com/allstreets')
     .then((response) => response.json())
     .then((responseJson) => {
       mainComponent.setState({ annotations: responseJson }, () => {
         // fetch last 24-hours of reported incidents
-        fetch('http://localhost:3000/incidents')
+        fetch('https://sfwalker.herokuapp.com/incidents')
         .then((response) => response.json())
         .then((responseJson) => {
           console.log('incidents', responseJson);
-          mainComponent.setState({
-            annotations: mainComponent.state.annotations.concat(responseJson)
-          });
+          mainComponent.setState({
+            annotations: mainComponent.state.annotations.concat(responseJson)
+          });
         });
       });
     });
@@ -448,12 +507,23 @@ class MapExample extends Component {
   }
 
   submitIncident() {
-    this.setState({view: 1})
+    // this.setState({view: 1})
     console.log('incident sent to backend')
     socket.emit('report', {
       category: this.state.checkListOption, 
       coords: [this.state.center.latitude, this.state.center.longitude]
     });
+    var annotations = this.state.annotations.slice();
+    for (var i = 0; i < annotations.length; i++) {
+      if (annotations[i].id === 'newReportPointer') {
+        annotations.splice(i, 1);
+        i--;
+      }
+    }
+    this.setState({
+      view: 1,
+      annotations: annotations
+    }, () => console.log(annotations.length));
   }
 
   showButtons() {
@@ -681,6 +751,54 @@ class MapExample extends Component {
                 </View>
               </View>
               {this.showButtons()}
+              <View style={{marginTop: 22}}>
+                <Modal
+                  animationType={'fade'}
+                  transparent={true}
+                  visible={this.state.reportModalVisible}
+                  onRequestClose={this.closeReportModal}
+                  >
+                  <View style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    padding: 20
+                  }}>
+                    <View style={{
+                      alignItems: 'center',
+                      backgroundColor: '#fff',
+                      borderRadius: 10,
+                      padding: 10,
+                    }}>
+                      <Text style={{
+                        margin: 10
+                      }}>
+                        An incident has been reported on your route.
+                      </Text>
+                      <Button onPress={() => {
+                          this.setReportModalVisible(false);
+                          this.showRoutes();
+                        }}
+                        containerStyle={styles.modalButtonContainer}
+                        style={styles.modalButton}
+                        >
+                        Recalculate with same endpoints
+                      </Button>
+                      <Button onPress={this.calculateFromCurrentLocation.bind(this)}
+                        containerStyle={styles.modalButtonContainer}
+                        style={styles.modalButton}
+                        >
+                        Recalculate from current location
+                      </Button>
+                      <Button onPress={this.setReportModalVisible.bind(this, false)}
+                        containerStyle={styles.modalButtonContainer}
+                        style={styles.modalButton}
+                        >
+                        Close
+                      </Button>
+                    </View>
+                  </View>
+                </Modal>
+              </View>
           </View>
           <View>
             <ScrollView>
@@ -749,6 +867,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 20,
+  },
+  modalButtonContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    margin: 2,
+    overflow: 'hidden',
+    borderRadius: 20,
+    backgroundColor: '#007aff'
+  },
+  modalButton: {
+    color: 'white'
   }
 });
 
