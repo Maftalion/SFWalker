@@ -128,12 +128,12 @@ class MapExample extends Component {
       annotations: annotations.concat([{
         type: 'point',
         id: 'newReportPointer',
-        coordinates: [center.latitude, center.longitude],
-        annotationImage: {
-          source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-          height: 25,
-          width: 25
-        }
+        coordinates: [center.latitude, center.longitude]
+        // annotationImage: {
+        //   source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+        //   height: 25,
+        //   width: 25
+        // }
       }])
     })
   }
@@ -261,12 +261,12 @@ class MapExample extends Component {
         annotations: this.state.annotations.concat([{
           type: 'point',
           id: 'newReportPointer',
-          coordinates: [location.latitude, location.longitude],
-          annotationImage: {
-            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-            height: 25,
-            width: 25
-          }
+          coordinates: [location.latitude, location.longitude]//,
+          // annotationImage: {
+          //   source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+          //   height: 25,
+          //   width: 25
+          // }
         }])
       }, () => console.log(this.state.annotations.length));
     }
@@ -298,12 +298,12 @@ class MapExample extends Component {
         annotations: [...mainComponent.state.annotations, {
           type: 'point',
           id: `report:${event.id}`,
-          coordinates: [event.latitude, event.longitude],
-          annotationImage: {
-            source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-            height: 25,
-            width: 25
-          }
+          coordinates: [event.latitude, event.longitude]//,
+          // annotationImage: {
+          //   source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
+          //   height: 25,
+          //   width: 25
+          // }
         }]
       }, () => {
         if (mainComponent.state.safe) {
