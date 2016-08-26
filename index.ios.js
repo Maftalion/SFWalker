@@ -150,7 +150,6 @@ class MapExample extends Component {
       })
       .then((response) => response.json())
       .then((responseJson) => {
-        console.log('responseJSON', responseJson);
         responseJson.short.forEach((el) => {
           [el[0], el[1]] = [el[1], el[0]];
         });
@@ -222,16 +221,13 @@ class MapExample extends Component {
   calculateFromCurrentLocation = () => {
     this.setReportModalVisible(false);
     navigator.geolocation.getCurrentPosition((position) => {
-      console.log(position, typeof position);
       fetch('https://maps.googleapis.com/maps/api/geocode/json?latlng=' + position.coords.latitude + ',' + position.coords.longitude + '&key=AIzaSyB_qAJhc4T9bjShAitFLJlm7_8RvO5qooM')
       .then((response) => response.json())
       .then((responseJson) => {
-        console.log(responseJson);
         this.setState({
           startAddress: responseJson.results[0].formatted_address,
           start: [position.coords.latitude, position.coords.longitude]
         }, () => {
-          console.log('start', this.state.start);
           this.handleStart(this.state.startAddress);
         });
       });
@@ -239,7 +235,6 @@ class MapExample extends Component {
   }
 
   returnToMap = () => {
-    console.log('returning');
     this.setState({
       view: 1
     })
@@ -260,25 +255,12 @@ class MapExample extends Component {
           id: 'newReportPointer',
           coordinates: [location.latitude, location.longitude]
         }])
-      }, () => console.log(this.state.annotations.length));
+      });
     }
   }
 
   onChangeUserTrackingMode = (userTrackingMode) => {
     this.setState({ userTrackingMode });
-    console.log('onChangeUserTrackingMode', userTrackingMode);
-  }
-
-  componentWillMount() {
-    this._offlineProgressSubscription = Mapbox.addOfflinePackProgressListener(progress => {
-      console.log('offline pack progress', progress);
-    });
-    this._offlineMaxTilesSubscription = Mapbox.addOfflineMaxAllowedTilesListener(tiles => {
-      console.log('offline max allowed tiles', tiles);
-    });
-    this._offlineErrorSubscription = Mapbox.addOfflineErrorListener(error => {
-      console.log('offline error', error);
-    });
   }
 
   componentDidMount() {
@@ -294,7 +276,6 @@ class MapExample extends Component {
     });
 
     socket.on('appendReport', function(event) {
-      console.log(event.latitude, event.longitude);
       mainComponent.setState({
         annotations: [...mainComponent.state.annotations, {
           type: 'point',
@@ -318,7 +299,6 @@ class MapExample extends Component {
           })
           .then((response) => response.json())
           .then((responseJson) => {
-            console.log('newPath', responseJson);
             var newSafe = responseJson.safe;
             newSafe.forEach((el) => {
               [el[0], el[1]] = [el[1], el[0]];
@@ -337,7 +317,6 @@ class MapExample extends Component {
           });
         }
       });
-      console.log('append incident to map', event);
     });
 
     //fetch street colors
@@ -358,12 +337,6 @@ class MapExample extends Component {
         })
       })
     })
-  }
-
-  componentWillUnmount() {
-    this._offlineProgressSubscription.remove();
-    this._offlineMaxTilesSubscription.remove();
-    this._offlineErrorSubscription.remove();
   }
 
   showNav() {
@@ -526,7 +499,6 @@ class MapExample extends Component {
 
   submitIncident() {
     // this.setState({view: 1})
-    console.log('incident sent to backend')
     socket.emit('report', {
       category: this.state.checkListOption,
       coords: [this.state.center.latitude, this.state.center.longitude]
@@ -541,7 +513,7 @@ class MapExample extends Component {
     this.setState({
       view: 1,
       annotations: annotations
-    }, () => console.log(annotations.length));
+    });
   }
 
   // showButtons() {
@@ -702,7 +674,7 @@ class MapExample extends Component {
             </View>
             <TouchableWithoutFeedback>
               <View>
-                <Text>{'\t Alt: Uber' + '  \t'} Estimated Time: {this.state.uber.time + ' \t'} Price: {this.state.uber.price}</Text>
+                <Text>{'\t Uber' + '  \t'} Estimated Time: {this.state.uber.time + ' \t'} Price: {this.state.uber.price}</Text>
               </View>
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={this.returnToMap}>
