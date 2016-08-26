@@ -18,7 +18,7 @@ import convertGPS from './src/api';
 import io from 'socket.io-client/socket.io'
 import Buttons from './src/components/buttons'
 import { RadioButtons } from 'react-native-radio-buttons'
-
+//heroku url: https://sfwalker.herokuapp.com
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
 
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
@@ -129,11 +129,6 @@ class MapExample extends Component {
         type: 'point',
         id: 'newReportPointer',
         coordinates: [center.latitude, center.longitude]
-        // annotationImage: {
-        //   source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-        //   height: 25,
-        //   width: 25
-        // }
       }])
     })
   }
@@ -261,16 +256,10 @@ class MapExample extends Component {
         annotations: this.state.annotations.concat([{
           type: 'point',
           id: 'newReportPointer',
-          coordinates: [location.latitude, location.longitude]//,
-          // annotationImage: {
-          //   source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-          //   height: 25,
-          //   width: 25
-          // }
+          coordinates: [location.latitude, location.longitude]
         }])
       }, () => console.log(this.state.annotations.length));
     }
-    console.log('onRegionDidChange', location);
   }
 
   onChangeUserTrackingMode = (userTrackingMode) => {
@@ -292,18 +281,23 @@ class MapExample extends Component {
 
   componentDidMount() {
     const mainComponent = this;
+
+    //initialize map to current position
+    navigator.geolocation.getCurrentPosition((position) => {
+      mainComponent.setState({ center: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        } 
+      });
+    });
+
     socket.on('appendReport', function(event) {
       console.log(event.latitude, event.longitude);
       mainComponent.setState({
         annotations: [...mainComponent.state.annotations, {
           type: 'point',
           id: `report:${event.id}`,
-          coordinates: [event.latitude, event.longitude]//,
-          // annotationImage: {
-          //   source: { uri: 'https://cldup.com/7NLZklp8zS.png' },
-          //   height: 25,
-          //   width: 25
-          // }
+          coordinates: [event.latitude, event.longitude]
         }]
       }, () => {
         if (mainComponent.state.safe) {
@@ -359,6 +353,7 @@ class MapExample extends Component {
         });
       });
     });
+
   }
 
   componentWillUnmount() {
