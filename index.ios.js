@@ -15,9 +15,12 @@ import {
 } from 'react-native';
 import Button from 'react-native-button';
 import convertGPS from './src/api';
-import io from 'socket.io-client/socket.io'
-import Buttons from './src/components/buttons'
-import { RadioButtons } from 'react-native-radio-buttons'
+
+import io from 'socket.io-client/socket.io';
+import Buttons from './src/components/buttons';
+import { RadioButtons } from 'react-native-radio-buttons';
+import Sound from 'react-native-sound';
+
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
@@ -275,6 +278,15 @@ class MapExample extends Component {
       });
     });
 
+    var bugle = new Sound('bugle.mp3', Sound.MAIN_BUNDLE, (e) => {
+      if (e) {
+        console.log('error', e);
+      } else {
+        console.log('duration', bugle.getDuration());
+        this.setState({ sound: bugle })
+      }
+    });
+
     socket.on('appendReport', function(event) {
       mainComponent.setState({
         annotations: [...mainComponent.state.annotations, {
@@ -317,6 +329,8 @@ class MapExample extends Component {
           });
         }
       });
+      console.log('append incident to map', event);
+      mainComponent.state.sound.play();
     });
 
     //fetch street colors
