@@ -18,15 +18,17 @@ import convertGPS from './src/api';
 import io from 'socket.io-client/socket.io'
 import Buttons from './src/components/buttons'
 import { RadioButtons } from 'react-native-radio-buttons'
-//heroku url: https://sfwalker.herokuapp.com
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
-
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
 
 class MapExample extends Component {
 
   state = {
+    uber: {
+      time: '',
+      price: ''
+    },
     center: {
       latitude: 37.7836925,
       longitude: -122.4111781
@@ -148,7 +150,6 @@ class MapExample extends Component {
       })
       .then((response) => response.json())
       .then((responseJson) => {
-        console.log('responseJSON', responseJson);
         responseJson.short.forEach((el) => {
           [el[0], el[1]] = [el[1], el[0]];
         });
@@ -220,16 +221,13 @@ class MapExample extends Component {
   calculateFromCurrentLocation = () => {
     this.setReportModalVisible(false);
     navigator.geolocation.getCurrentPosition((position) => {
-      console.log(position, typeof position);
       fetch('https://maps.googleapis.com/maps/api/geocode/json?latlng=' + position.coords.latitude + ',' + position.coords.longitude + '&key=AIzaSyB_qAJhc4T9bjShAitFLJlm7_8RvO5qooM')
       .then((response) => response.json())
       .then((responseJson) => {
-        console.log(responseJson);
         this.setState({
           startAddress: responseJson.results[0].formatted_address,
           start: [position.coords.latitude, position.coords.longitude]
         }, () => {
-          console.log('start', this.state.start);
           this.handleStart(this.state.startAddress);
         });
       });
@@ -237,7 +235,6 @@ class MapExample extends Component {
   }
 
   returnToMap = () => {
-    console.log('returning');
     this.setState({
       view: 1
     })
@@ -258,25 +255,12 @@ class MapExample extends Component {
           id: 'newReportPointer',
           coordinates: [location.latitude, location.longitude]
         }])
-      }, () => console.log(this.state.annotations.length));
+      });
     }
   }
 
   onChangeUserTrackingMode = (userTrackingMode) => {
     this.setState({ userTrackingMode });
-    console.log('onChangeUserTrackingMode', userTrackingMode);
-  }
-
-  componentWillMount() {
-    this._offlineProgressSubscription = Mapbox.addOfflinePackProgressListener(progress => {
-      console.log('offline pack progress', progress);
-    });
-    this._offlineMaxTilesSubscription = Mapbox.addOfflineMaxAllowedTilesListener(tiles => {
-      console.log('offline max allowed tiles', tiles);
-    });
-    this._offlineErrorSubscription = Mapbox.addOfflineErrorListener(error => {
-      console.log('offline error', error);
-    });
   }
 
   componentDidMount() {
@@ -287,17 +271,18 @@ class MapExample extends Component {
       mainComponent.setState({ center: {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
-        } 
+        }
       });
     });
 
     socket.on('appendReport', function(event) {
-      console.log(event.latitude, event.longitude);
       mainComponent.setState({
         annotations: [...mainComponent.state.annotations, {
           type: 'point',
           id: `report:${event.id}`,
-          coordinates: [event.latitude, event.longitude]
+          coordinates: [event.latitude, event.longitude],
+          title: event.category,
+          subtitle: event.datetime
         }]
       }, () => {
         if (mainComponent.state.safe) {
@@ -314,12 +299,10 @@ class MapExample extends Component {
           })
           .then((response) => response.json())
           .then((responseJson) => {
-            console.log('newPath', responseJson);
             var newSafe = responseJson.safe;
             newSafe.forEach((el) => {
               [el[0], el[1]] = [el[1], el[0]];
             });
-
             var deepEquals = mainComponent.state.safe.length === newSafe.length;
             if (deepEquals) {
               for (var i = 0; i < newSafe.length; i++) {
@@ -334,7 +317,6 @@ class MapExample extends Component {
           });
         }
       });
-      console.log('append incident to map', event);
     });
 
     //fetch street colors
@@ -346,20 +328,15 @@ class MapExample extends Component {
         fetch('https://sfwalker.herokuapp.com/incidents')
         .then((response) => response.json())
         .then((responseJson) => {
-          console.log('incidents', responseJson);
           mainComponent.setState({
             annotations: mainComponent.state.annotations.concat(responseJson)
           });
-        });
-      });
-    });
-
-  }
-
-  componentWillUnmount() {
-    this._offlineProgressSubscription.remove();
-    this._offlineMaxTilesSubscription.remove();
-    this._offlineErrorSubscription.remove();
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+      })
+    })
   }
 
   showNav() {
@@ -501,11 +478,29 @@ class MapExample extends Component {
     }
   }
 
+  handleUber = () => {
+    var comp = this;
+  if (this.state.start && this.state.dest){
+    fetch(`https://api.uber.com/v1/estimates/price?start_latitude=${this.state.start[0]}&start_longitude=${this.state.start[1]}&end_latitude=${this.state.dest[0]}&end_longitude=${this.state.dest[1]}&server_token=nP5afwPL5UTYxy39rQmVL8T0EKBEuVbhSUzQEnUt`)
+    .then((response) => response.json())
+    .then((uber) => {
+      comp.setState({
+        uber: {
+          time: uber.prices[1].duration /60,
+          price: uber.prices[1].estimate
+        }
+      })
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  }
+}
+
   submitIncident() {
     // this.setState({view: 1})
-    console.log('incident sent to backend')
     socket.emit('report', {
-      category: this.state.checkListOption, 
+      category: this.state.checkListOption,
       coords: [this.state.center.latitude, this.state.center.longitude]
     });
     var annotations = this.state.annotations.slice();
@@ -518,14 +513,16 @@ class MapExample extends Component {
     this.setState({
       view: 1,
       annotations: annotations
-    }, () => console.log(annotations.length));
+    });
   }
 
-  showButtons() {
-    if (this.state.view === 1) {
-      return <Buttons />
-    }
-  }
+  // showButtons() {
+  //   if (this.state.view === 1) {
+  //     return (
+  //       <Buttons/>
+  //     )
+  //   }
+  // }
 
   showReportUI() {
     if (this.state.view === 2) {
@@ -562,11 +559,6 @@ class MapExample extends Component {
   renderRoutesList() {
     if (this.state.view === 4) {
       function setSelectedOption(selectedRoute) {
-        // this.setState({
-        //   selectedRoute: selectedRoute
-        // });
-
-        console.log('selectedRoute', typeof selectedRoute);
         var selected = JSON.parse(selectedRoute)[0];
 
         var annotations = this.state.annotations.slice();
@@ -581,8 +573,6 @@ class MapExample extends Component {
         if (index) {
           var old = annotations.splice(index - 1, 2);
         }
-        console.log('old', old);
-
         // Have selected be drawn on top of unselected
         if ((selected === 'Short' && old[1].id === 'safeRoute') || (selected === 'Safe' && old[1].id === 'shortRoute')) {
           [old[0], old[1]] = [old[1], old[0]];
@@ -601,8 +591,6 @@ class MapExample extends Component {
       }
 
       function renderOption(option, selected, onSelect, index) {
-        console.log('option', option);
-        console.log('selected', selected, 'onSelect', onSelect, 'index', index);
         var route = JSON.parse(option);
 
         const textStyle = {
@@ -628,17 +616,6 @@ class MapExample extends Component {
         } else {
           style = baseStyle;
         }
-
-        // if (selected) {
-        //   checkMark = <Text style={{
-        //     flex: 0.1,
-        //     color: '#007AFF',
-        //     fontWeight: 'bold',
-        //     paddingTop: 8,
-        //     fontSize: 20,
-        //     alignSelf: 'center',
-        //   }}>✓</Text>
-        // }
 
         return (
           <TouchableWithoutFeedback onPress={onSelect} key={index}>
@@ -672,9 +649,7 @@ class MapExample extends Component {
         <View style={{flex: 1}}>
           <View>
             <View style={{
-              // backgroundColor: '#eeeeee',
               backgroundColor: 'rgba(238,238,238,0.8)',
-              // backgroundColor: 'rgba(255,0,0,0.4)',
               paddingTop: 0,
               paddingBottom: 0,
             }}>
@@ -697,6 +672,11 @@ class MapExample extends Component {
             renderContainer={ renderContainer }
             />
             </View>
+            <TouchableWithoutFeedback>
+              <View>
+                <Text>{'\t Uber' + '  \t'} Estimated Time: {this.state.uber.time + ' \t'} Price: {this.state.uber.price}</Text>
+              </View>
+            </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={this.returnToMap}>
               <View style={{backgroundColor: 'rgba(238,238,238,0.8)'}}>
                 <Text style={{
@@ -711,6 +691,7 @@ class MapExample extends Component {
         </View>
       )
     }
+    this.handleUber();
   }
 
   render() {
@@ -745,7 +726,6 @@ class MapExample extends Component {
                   </ScrollView>
                 </View>
               </View>
-              {this.showButtons()}
               <View style={{marginTop: 22}}>
                 <Modal
                   animationType={'fade'}
@@ -817,7 +797,7 @@ const styles = StyleSheet.create({
   reportButton: {
     position: 'absolute',
     bottom: 0,
-    right: 0
+    left: 160
   },
   textContainer: {
     marginHorizontal: 5
@@ -828,12 +808,12 @@ const styles = StyleSheet.create({
   textInput: {
     height: 30,
     textAlign: 'center',
-    borderColor: 'grey',
+    borderColor: 'lightgrey',
     borderWidth: 1,
     borderRadius: 15,
     marginHorizontal: 8,
     marginTop: 2,
-    backgroundColor: '#d3d3d3',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     opacity: .7
   },
   container: {

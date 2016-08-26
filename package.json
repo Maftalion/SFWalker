@@ -3,13 +3,14 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "start": "react-native run-ios",
     "test": "react-native run-ios"
   },
   "dependencies": {
     "bluebird": "^3.4.1",
     "express": "^4.14.0",
     "json2csv": "^3.6.3",
+    "moment": "^2.14.1",
     "pg": "^6.1.0",
     "react": "15.2.1",
     "react-native": "0.31.0",
@@ -17,6 +18,7 @@
     "react-native-mapbox-gl": "^5.0.0",
     "react-native-radio-buttons": "^0.12.1",
     "react-native-socketio": "^0.3.0",
+    "react-native-swift-socketio": "0.0.6",
     "rnpm": "^1.9.0",
     "sequelize": "^3.24.0",
     "socket.io": "^1.4.8",
