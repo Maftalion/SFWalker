@@ -1,6 +1,7 @@
 // var hash = require(__dirname + '/crime/sfinterhashScores.json');
 // var hash = require(__dirname + '/crime/sfinterhashScoresCrimeDistance.json');
-var hash = require(__dirname + '/crime/sfRoadsInterhashScoresCrimeDistance.json');
+var normalHash = require(__dirname + '/crime/sfRoadsInterhashScoresCrimeDistance.json');
+var ptHash = require(__dirname + '/crime/sfRoadsBartInterhashScoresCrimeDistance.json');
 var PriorityQueue = require(__dirname + '/util/priorityQueue.js');
 var Incident = require(__dirname + '/models/model');
 var fs = require('fs');
@@ -55,7 +56,23 @@ var binarySearch = function(array, pointLat) {
   return -1;
 }
 
-module.exports = function(start, dest, attr) {
+module.exports = function(start, dest, attr, publicTransport) {
+  // if (publicTransport) {
+  //   var hash = ptHash;
+  // } else {
+  //   var hash = normalHash;
+  // }
+  var hash = publicTransport ? ptHash : normalHash;
+
+  console.log(publicTransport ? 'ptHash' : 'normalHash');
+
+  for (var key in hash) {
+    if (hash[key].type === 'publicTransport') {
+      console.log(key);
+      console.log(hash[key]);
+    }
+  }
+
   // Find closest nodes to start and dest
   console.log('dijkstra', start, dest, attr);
   var closestStart, closestDest;
@@ -206,14 +223,20 @@ module.exports = function(start, dest, attr) {
       cur = q.pop();
       // console.log('cur', count, keycount, cur);
 
+      // if (hash[cur.key].type === 'publicTransport') {
+      //   console.log(hash[cur.key], count, keycount);
+      // }
+
       if (cur.key === JSON.stringify(dest)) {
         console.log('dest reached');
         var s = [];
         var u = cur.key;
         while (hash[u].prev) {
+          if (hash[u].type === 'publicTransport') { console.log(hash[u]); }
           s.unshift(u);
           u = hash[u].prev;
         }
+        if (hash[u].type === 'publicTransport') { console.log(hash[u]); }
         s.unshift(u);
 
         // var jsonPath = [];
@@ -232,11 +255,25 @@ module.exports = function(start, dest, attr) {
         var path = [];
         var pathDist = 0;
         var pathDanger = 0;
+        var lastStation = undefined;
+        var instructions = [];
         for (var x = 0; x < s.length - 1; x++) {
           path.push(JSON.parse(s[x]));
+          if (hash[s[x]].type === 'publicTransport') {
+            if (!lastStation) {
+              instructions.push('Take Bart from ' + hash[s[x]].stationName + ' to ');
+            }
+            lastStation = hash[s[x]].stationName;
+          }
+          if (hash[s[x]].type !== 'publicTransport' && lastStation !== undefined) {
+            instructions[instructions.length - 1] += lastStation;
+            lastStation = undefined;
+          }
+
           var intermediatePath = undefined;
           var intermediateDist = 0;
           var intermediateDanger = 0;
+          var transit;
           // console.log('x', hash[s[x]].edges);
           // Traverse all edges from node, in case two different roads connect two nodes.
           for (var y = 0; y < hash[s[x]].edges.length; y++) {
@@ -247,13 +284,20 @@ module.exports = function(start, dest, attr) {
               edgeWeight = hash[s[x]].edges[y][attr];
               intermediateDist = hash[s[x]].edges[y].distance;
               intermediateDanger = hash[s[x]].edges[y].walkDangerScore;
+              transit = hash[s[x]].edges[y].type === 'BART';
               // console.log('inter', intermediatePath, edgeWeight, intermediateDist, intermediateDanger);
             }
           }
           path = path.concat(intermediatePath);
-          pathDist += intermediateDist;
-          pathDanger += intermediateDanger;
 
+          if (!transit) {
+            pathDist += intermediateDist;
+            pathDanger += intermediateDanger;
+          }
+        }
+
+        if (lastStation) {
+          instructions[instructions.length - 1] += lastStation;
         }
         path.push(JSON.parse(s[s.length - 1]));
 
@@ -263,13 +307,19 @@ module.exports = function(start, dest, attr) {
         for (var key in hash) {
           hash[key].prev = undefined;
         }
-        return { path: path, dist: pathDist, danger: pathDanger };
+        return { path: path, dist: pathDist, danger: pathDanger, instructions: instructions };
       }
 
       for (var i = 0; i < hash[cur.key].edges.length; i++) {
+
         var nextkey = hash[cur.key].edges[i].node;
 
+        // if (hash[cur.key].edges[i].type === 'BART') {
+        //   console.log(hash[cur.key]);
+        // }
+
         if (hash[nextkey]) {
+          // if (hash[cur.key].edges[i].type === 'connection' || hash[cur.key].edges[i].type === 'BART') {
           var alt = cur.distSource + parseInt(hash[cur.key].edges[i][attr]);
           // console.log('alt', alt, 'nextDistSource', hash[nextkey].distSource)
           if (alt < hash[nextkey].distSource) {

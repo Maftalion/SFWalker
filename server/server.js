@@ -60,9 +60,12 @@ app.get('/allstreets', function(req, res) {
 });
 
 app.post('/routes', function(req, res) {
-  Promise.all([getRoutes(req.body.start, req.body.dest, 'distance'), getRoutes(req.body.start, req.body.dest, 'crimeDistance')])
+  Promise.all([getRoutes(req.body.start, req.body.dest, 'distance', false), 
+               getRoutes(req.body.start, req.body.dest, 'crimeDistance', false),
+               getRoutes(req.body.start, req.body.dest, 'distance', true),
+               getRoutes(req.body.start, req.body.dest, 'crimeDistance', true)])
   .then(function(values) {
-    console.log(values);
+    // console.log(values);
     res.type('application/json');
     res.status(200);
     res.send(JSON.stringify({
@@ -71,7 +74,15 @@ app.post('/routes', function(req, res) {
       shortDanger: values[0].danger,
       safe: values[1].path,
       safeDist: values[1].dist,
-      safeDanger: values[1].danger
+      safeDanger: values[1].danger,
+      ptShort: values[2].path,
+      ptShortDist: values[2].dist,
+      ptShortDanger: values[2].danger,
+      ptShortInstructions: values[2].instructions,
+      ptSafe: values[3].path,
+      ptSafeDist: values[3].dist,
+      ptSafeDanger: values[3].danger,
+      ptSafeInstructions: values[3].instructions
     }));
   });
 });
