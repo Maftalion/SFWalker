@@ -22,6 +22,7 @@ import { RadioButtons } from 'react-native-radio-buttons';
 import Sound from 'react-native-sound';
 
 var socket = io('https://sfwalker.herokuapp.com', { transports: ['websocket'] } );
+
 const accessToken = 'pk.eyJ1IjoibWFmdGFsaW9uIiwiYSI6ImNpcmllbXViZDAyMTZnYm5yaXpnMjByMTkifQ.rSrkLVyRbL3c8W1Nm2_6kA';
 Mapbox.setAccessToken(accessToken);
 
@@ -140,7 +141,7 @@ class MapExample extends Component {
 
   showRoutes = () => {
     if (this.state.start && this.state.dest) {
-      fetch('https://sfwalker.herokuapp.com/routes', {
+      fetch('http://localhost:3000/routes', {
         method: 'post',
         headers: {
           'Accept': 'application/json',
@@ -159,28 +160,48 @@ class MapExample extends Component {
         responseJson.safe.forEach((el) => {
           [el[0], el[1]] = [el[1], el[0]];
         });
+        responseJson.ptShort.forEach((el) => {
+          [el[0], el[1]] = [el[1], el[0]];
+        });
+        responseJson.ptSafe.forEach((el) => {
+          [el[0], el[1]] = [el[1], el[0]];
+        });
 
         var annotations = this.state.annotations.slice();
         var index = undefined;
         annotations.forEach((feature, i) => {
-          if (feature.id === 'shortRoute' || feature.id === 'safeRoute') {
+          if (feature.id === 'shortRoute' || feature.id === 'safeRoute' || feature.id === 'ptShortRoute' || feature.id === 'ptSafeRoute') {
             index = i;
           }
         });
 
         if (index) {
-          annotations.splice(index - 1, 2);
+          annotations.splice((this.state.pt ? index - 3 : index - 1), (this.state.pt ? 4 : 2));
         }
+
+        var ptDiff = responseJson.shortDist !== responseJson.ptShortDist ||
+                     responseJson.shortDanger !== responseJson.ptShortDanger ||
+                     responseJson.safeDist !== responseJson.ptSafeDist ||
+                     responseJson.safeDanger !== responseJson.ptSafeDanger;
 
         this.setState({
           view: 4,
           selectedRoute: undefined,
+          pt: ptDiff,
           short: responseJson.short,
           shortDist: responseJson.shortDist,
           shortDanger: responseJson.shortDanger,
           safe: responseJson.safe,
           safeDist: responseJson.safeDist,
           safeDanger: responseJson.safeDanger,
+          ptShort: ptDiff ? responseJson.ptShort : undefined,
+          ptShortDist: ptDiff ? responseJson.ptShortDist : undefined,
+          ptShortDanger: ptDiff ? responseJson.ptShortDanger : undefined,
+          ptShortInstructions: ptDiff ? responseJson.ptShortInstructions : undefined,
+          ptSafe: ptDiff ? responseJson.ptSafe : undefined,
+          ptSafeDist: ptDiff ? responseJson.ptSafeDist : undefined,
+          ptSafeDanger: ptDiff ? responseJson.ptSafeDanger : undefined,
+          ptSafeInstructions: ptDiff ? responseJson.ptSafeInstructions : undefined,
           annotations: annotations.concat([{
             coordinates: responseJson.short,
             type: 'polyline',
@@ -195,7 +216,21 @@ class MapExample extends Component {
             strokeWidth: 5,
             strokeAlpha: 0.7,
             id: 'safeRoute'
-          }])
+          }]).concat(ptDiff ? [{
+            coordinates: responseJson.ptShort,
+            type: 'polyline',
+            strokeColor: '#2A0CEA',
+            strokeWidth: 5,
+            strokeAlpha: 0.7,
+            id: 'ptShortRoute'
+          }, {
+            coordinates: responseJson.ptSafe,
+            type: 'polyline',
+            strokeColor: '#B428A1',
+            strokeWidth: 5,
+            strokeAlpha: 0.7,
+            id: 'ptSafeRoute'
+          }] : [])
         }, () => {
           var nodes = this.state.short.concat(this.state.safe, [this.state.start, this.state.dest]);
           var latSW = nodes[0][0]; var latNE = nodes[0][0]; var lonSW = nodes[0][1]; var lonNE = nodes[0][1];
@@ -216,6 +251,8 @@ class MapExample extends Component {
             latNE + 0.1 * spanLat,
             lonNE + 0.1 * spanLon
           );
+
+          console.log('ptdiff', this.state);
         });
       });
     }
@@ -298,7 +335,7 @@ class MapExample extends Component {
         }]
       }, () => {
         if (mainComponent.state.safe) {
-          fetch('https://sfwalker.herokuapp.com/routes', {
+          fetch('http://localhost:3000/routes', {
             method: 'post',
             headers: {
               'Accept': 'application/json',
@@ -334,12 +371,12 @@ class MapExample extends Component {
     });
 
     //fetch street colors
-    fetch('https://sfwalker.herokuapp.com/allstreets')
+    fetch('http://localhost:3000/allstreets')
     .then((response) => response.json())
     .then((responseJson) => {
       mainComponent.setState({ annotations: responseJson }, () => {
         // fetch last 24-hours of reported incidents
-        fetch('https://sfwalker.herokuapp.com/incidents')
+        fetch('http://localhost:3000/incidents')
         .then((response) => response.json())
         .then((responseJson) => {
           mainComponent.setState({
@@ -573,44 +610,81 @@ class MapExample extends Component {
   renderRoutesList() {
     if (this.state.view === 4) {
       function setSelectedOption(selectedRoute) {
-        var selected = JSON.parse(selectedRoute)[0];
+        // // this.setState({
+        // //   selectedRoute: selectedRoute
+        // // });
 
-        var annotations = this.state.annotations.slice();
-        var indexShort = undefined;
-        var index
-        annotations.forEach((feature, i) => {
-          if (feature.id === 'shortRoute' || feature.id === 'safeRoute') {
-            index = i;
-          }
-        });
+        // console.log('selectedRoute', typeof selectedRoute);
+        // var selected = JSON.parse(selectedRoute)[0];
 
-        if (index) {
-          var old = annotations.splice(index - 1, 2);
-        }
-        // Have selected be drawn on top of unselected
-        if ((selected === 'Short' && old[1].id === 'safeRoute') || (selected === 'Safe' && old[1].id === 'shortRoute')) {
-          [old[0], old[1]] = [old[1], old[0]];
-        }
+        // var annotations = this.state.annotations.slice();
+        // var indexShort = undefined;
+        // var index;
+        // annotations.forEach((feature, i) => {
+        //   if (feature.id === 'shortRoute' || feature.id === 'safeRoute' || feature.id === 'ptShortRoute' || feature.id === 'ptSafeRoute') {
+        //     index = i;
+        //   }
+        // });
 
-        old[0].strokeWidth = 5;
-        old[0].strokeAlpha = 0.7;
-        old[1].strokeWidth = 8;
-        old[1].strokeAlpha = 1;
+        // console.log(this.state.pt ? index - 3 : index - 1, this.state.pt ? 4 : 2);
 
-        this.setState({
-          view: 4,
-          selectedRoute: selectedRoute,
-          annotations: annotations.concat(old)
-        });
+        // if (index) {
+        //   var old = annotations.splice((this.state.pt ? index - 3 : index - 1), (this.state.pt ? 4 : 2));
+        //   // var old = annotations.splice(6834, 4)
+        // }
+        // console.log('old1', old);
+        // const ids = {
+        //   Short: 'shortRoute',
+        //   Safe: 'safeRoute',
+        //   PTShort: 'ptShortRoute',
+        //   PTSafe: 'ptSafeRoute'
+        // }
+
+        // var last = old[old.length - 1] ? old.length - 1 : old.length - 2;
+
+        // // Have selected be drawn on top of unselected
+        // // if ((selected === 'Short' && old[1].id !== 'shortRoute') || (selected === 'Safe' && old[1].id !== 'shortRoute')) {
+        // if (old[last].id !== ids[selected]) {
+        //   var selectedIndex;
+        //   for (var k = 0; k < old.length; k++) {
+        //     if (old[k].id === selected) {
+        //       selectedIndex = k;
+        //     }
+        //   }
+        //   [old[k], old[last]] = [old[last], old[k]];
+        // }
+
+        // for (var k = 0; k < last; k++) {
+        //   old[k].strokeWidth = 5;
+        //   old[k].strokeAlpha = 0.7;
+        // }
+        // // old[0].strokeWidth = 5;
+        // // old[0].strokeAlpha = 0.7;
+        // console.log('old2', old);
+        // old[last].strokeWidth = 8;
+        // old[last].strokeAlpha = 1;
+
+        // this.setState({
+        //   view: 4,
+        //   selectedRoute: selectedRoute,
+        //   annotations: annotations.concat(old)
+        // });
       }
 
       function renderOption(option, selected, onSelect, index) {
         var route = JSON.parse(option);
 
+        const colors = {
+          Safe: '#5DADE2',
+          Short: '#28B463',
+          PTSafe: '#B428A1',
+          PTShort: '#2A0CEA',
+        }
+
         const textStyle = {
           paddingTop: 10,
           paddingBottom: 10,
-          color: route[0] === 'Safe' ? '#5DADE2' : '#28B463',
+          color: colors[route[0]],
           flex: 0.2,
           fontSize: 14,
           fontWeight: selected ? 'bold' : 'normal'
@@ -634,7 +708,7 @@ class MapExample extends Component {
         return (
           <TouchableWithoutFeedback onPress={onSelect} key={index}>
             <View style={style}>
-              <Text style={textStyle}>{route[0] + '  \t\t'} Distance: {(route[2] / 1000).toFixed(1) + ' km    \t'} Danger: {route[3].toFixed(2)}</Text>
+              <Text style={textStyle}>{route[0] + (route[0].length <= 5 ? '  \t\t' : '   \t')} Distance: {(route[2] / 1000).toFixed(1) + ' km    \t'} Danger: {route[3].toFixed(2) + '\n' + (route[4] ? route[4] : '')}</Text>
             </View>
           </TouchableWithoutFeedback>
         )
@@ -679,7 +753,10 @@ class MapExample extends Component {
             options={ [
               JSON.stringify(['Safe', this.state.safe, this.state.safeDist, this.state.safeDanger]),
               JSON.stringify(['Short', this.state.short, this.state.shortDist, this.state.shortDanger])
-            ] }
+            ].concat(this.state.pt ? [
+              JSON.stringify(['PTSafe', this.state.ptSafe, this.state.ptSafeDist, this.state.ptSafeDanger, this.state.ptSafeInstructions]),
+              JSON.stringify(['PTShort', this.state.ptShort, this.state.ptShortDist, this.state.ptShortDanger, this.state.ptShortInstructions])
+            ] : []) }
             onSelection={ setSelectedOption.bind(this) }
             selectedOption={ this.state.selectedRoute }
             renderOption={ renderOption }
